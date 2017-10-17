@@ -1,1 +1,4 @@
 This repo contains only the csv data set input/outputs and the script to parse the datasets based on our criteria
+
+Usage: create a directory called “csv” and run the cleandata.py script. Output files will be placed in the directory where cleandata.py is run.
+
