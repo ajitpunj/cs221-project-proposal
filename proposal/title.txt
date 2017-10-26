@@ -1,1 +1,1 @@
-Predicting Flight Cancellations and Delays and Recommending Alternatives
+Predicting Flight Delays and Cancellations
