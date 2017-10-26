@@ -1,7 +1,6 @@
-CNN
-Predictor
 Clustering
 Recommendations
-Airlines
 Flights
 Delays
+machine learning
+
