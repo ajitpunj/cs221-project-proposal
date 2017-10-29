@@ -40,6 +40,10 @@ def run(input_args):
     #open the input file
     #inFile = glob.glob(input_args.input_file)
     #create all the output files to write to
+    if input_args.test!=None and input_args.test>0:
+        maxRow = input_args.test
+    else:
+        maxRow=float("+inf")
     stats=0
     cancelVect=[]
     delayVect=[]
@@ -60,6 +64,7 @@ def run(input_args):
         stats=1
         statDict = collections.defaultdict(int)
         carrierDict = collections.defaultdict(int)
+    counter=0
     #line by line input file processing\
     with open(input_args.input_file, 'rb') as csvFile:
         lines=csv.reader(csvFile,delimiter=',')
@@ -83,17 +88,22 @@ def run(input_args):
                 else:
                     statDict['otherCharOrigin']+=1
                 carrierDict[line[Row.UniqueCarrier.value]]+=1
+            counter+=1
+            if counter>=maxRow+1:
+                break
             featWriter.writerow(featLine)
             #add to cancel vector to write at end
             cancelVect.append(line[Row.Cancelled.value])
             #add to delay vector to write at end
             delayVect.append(line[Row.ArrDelay.value])
-        #print the 1 D cancel and delay values out 
-        cancelWriter.writerow(cancelVect[0])
-        delayWriter.writerow(delayVect[0])
+        #print the 1 D cancel and delay values out
+        cancelWriter.writerow(cancelVect)
+        delayWriter.writerow(delayVect)
 
     if stats:
         print "total flight count is {}".format(statDict['total'])
+        print "number of elements in the cancel vector is {}".format(len(cancelVect))
+        print "number of elements in the delay vector is {}".format(len(delayVect))
         print "number of delayed flights is {}".format(statDict['delayed'])        
         print "number of cancelled flights is {}".format(statDict['cancelled'])
         print "number of unique carriers is {}".format(len(carrierDict))
@@ -102,6 +112,7 @@ def run(input_args):
         print "number of origin airports with 2 chars is {}".format(statDict['twoCharOrigin'])
         print "number of origin airports with 3 chars is {}".format(statDict['threeCharOrigin'])
         print "number of origin airports with other chars is {}".format(statDict['otherCharOrigin'])
+        
                                                          
     featFile.close()
     cancelFile.close()
@@ -114,5 +125,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help= "the local path to the input file to act on")
 parser.add_argument("output_file_base", help= "the local path to the output base name to write to")
 parser.add_argument("-s","--stats", help= "option to print out statistics of the input file",type=int)
+parser.add_argument("-t","--test", help= "test with only the given number of rows",type=int)
 args = parser.parse_args()
 run(args)
