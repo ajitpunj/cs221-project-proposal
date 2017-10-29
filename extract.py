@@ -58,8 +58,8 @@ def run(input_args):
     #keep track of stats if specified
     if input_args.stats!=None and input_args.stats!=0:
         stats=1
-        statDict = defaultdict(int)
-        carrierDict = defaultdict(int)
+        statDict = collections.defaultdict(int)
+        carrierDict = collections.defaultdict(int)
     #line by line input file processing\
     with open(input_args.input_file, 'rb') as csvFile:
         lines=csv.reader(csvFile,delimiter=',')
@@ -72,6 +72,16 @@ def run(input_args):
             +line[Row.Origin.value:Row.TaxiIn.value]
             if stats:
                 statDict['cancelled']+=int(line[Row.Cancelled.value])
+                statDict['total']+=1
+                if line[Row.ArrDelay.value]!='NA':                    
+                    if int(line[Row.ArrDelay.value])>0:
+                        statDict['delayed']+=1
+                if len(line[Row.Origin.value])==2:
+                    statDict['twoCharOrigin']+=1
+                elif len(line[Row.Origin.value])==3:
+                    statDict['threeCharOrigin']+=1
+                else:
+                    statDict['otherCharOrigin']+=1
                 carrierDict[line[Row.UniqueCarrier.value]]+=1
             featWriter.writerow(featLine)
             #add to cancel vector to write at end
@@ -82,6 +92,17 @@ def run(input_args):
         cancelWriter.writerow(cancelVect[0])
         delayWriter.writerow(delayVect[0])
 
+    if stats:
+        print "total flight count is {}".format(statDict['total'])
+        print "number of delayed flights is {}".format(statDict['delayed'])        
+        print "number of cancelled flights is {}".format(statDict['cancelled'])
+        print "number of unique carriers is {}".format(len(carrierDict))
+        for carrier in carrierDict:
+            print "{} flights for carrier {}".format(carrierDict[carrier],carrier)
+        print "number of origin airports with 2 chars is {}".format(statDict['twoCharOrigin'])
+        print "number of origin airports with 3 chars is {}".format(statDict['threeCharOrigin'])
+        print "number of origin airports with other chars is {}".format(statDict['otherCharOrigin'])
+                                                         
     featFile.close()
     cancelFile.close()
     delayFile.close()
