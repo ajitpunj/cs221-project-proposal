@@ -11,30 +11,39 @@ def run(input_args):
     #read the inputs into numpy arrays
     #convert all the non numerical values
     data= pd.read_csv(input_args.feature_file,header=None)
-    print data
+    #turn all 'NaN' values to 0
     data.fillna(0,inplace=True)
-    print data
+    #encode every string as a numberical value for columns that have strings (like airline codes etc)
     for column in data:
         le = preprocessing.LabelEncoder()
         if data[column].dtype == object:
             le.fit(data[column])
             data[column]=le.transform(data[column])
-    print data
+
     features = data.as_matrix()
+    
     #results should all be numbers except for nan
     data = pd.read_csv(input_args.result_file,header=None)
     data.fillna(0,inplace=True)
     results = data.as_matrix()
+    #reshape for skikit (NO IDEA WHY but ok...)
+    results=results.reshape(-1,1)
 
-    print type(features)
-    print type(results)
-    print features
-    print features.shape
-    print results.shape
+#    print type(features)
+#    print type(results)
+#    print features
+#    print features.shape
+#    print results.shape
+
     #create linear regression object
     regr = linear_model.LinearRegression()
+
     #Train the model using the training set
-    regr.fit(features.reshape(-1,14),results)
+    regr.fit(features,results)
+
+    predictions = regr.predict(features)
+    print (predictions)
+    print (regr.coef_)
 
     #print "coefficients {}".format(regr.coef_)
     return
