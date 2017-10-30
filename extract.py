@@ -89,7 +89,7 @@ def run(input_args):
                     statDict['otherCharOrigin']+=1
                 carrierDict[line[Row.UniqueCarrier.value]]+=1
             counter+=1
-            if counter>=maxRow+1:
+            if counter>=maxRow:
                 break
             featWriter.writerow(featLine)
             #add to cancel vector to write at end
