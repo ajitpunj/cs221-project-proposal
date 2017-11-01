@@ -7,26 +7,26 @@ import enum
 class Row(enum.Enum):
     Year = 0
     Month = 1
-    DayOfMonth=2
+    DayOfMonth=2 #start here, all months are the same and year is irrelevant
     DayOfWeek=3
-    DepTime=4
-    CRSDepTime=5
-    ArrTime=6
+    DepTime=4 #dont take actual
+    CRSDepTime=5 
+    ArrTime=6 #dont take actual
     CRSArrTime=7
     UniqueCarrier=8
     FlightNum=9
     TailNum=10
-    ActualElapsedTime=11
+    ActualElapsedTime=11 #dont take actual
     CRSElapsedTime=12
     AirTime=13
-    ArrDelay=14
+    ArrDelay=14 #output for delay value
     DepDelay=15
     Origin=16
     Dest=17
     Distance=18
     TaxiIn=19
     TaxiOut=20
-    Cancelled=21
+    Cancelled=21 #output for cancel
     CancellationCode=22
     Diverted=23
     CarrierDelay=24
@@ -35,15 +35,40 @@ class Row(enum.Enum):
     SecurityDelay=27
     LateAircraftDelay=28
 
-
+#so we are taking
+#day of month
+#day of year
+#scheduled departure time
+#scheduled arrival time
+#airline
+#schedule air time
+#origin
+#dest
+#distance 
 def run(input_args):
-    #open the input file
-    #inFile = glob.glob(input_args.input_file)
-    #create all the output files to write to
-    if input_args.test!=None and input_args.test>0:
+    if input_args.test:
         maxRow = input_args.test
     else:
         maxRow=float("+inf")
+
+    if input_args.filter:
+        filt =1
+    else:
+        filt =0
+        
+    #dictionary for fast look up of top 10 airports
+    topAirports = collections.defaultdict(int)
+    topAirports['ATL']=0
+    topAirports['LAX']=0
+    topAirports['ORD']=0
+    topAirports['DFW']=0
+    topAirports['JFK']=0
+    topAirports['DEN']=0
+    topAirports['SFO']=0
+    topAirports['LAS']=0
+    topAirports['CLT']=0
+    topAirports['SEA']=0
+    
     stats=0
     cancelVect=[]
     delayVect=[]
@@ -55,7 +80,7 @@ def run(input_args):
     featFile = open(featFileName,'wb')
     cancelFile = open(cancelFileName,'wb')
     delayFile = open(delayFileName,'wb')
-    
+    #create all the output files to write to
     featWriter = csv.writer(featFile)
     cancelWriter = csv.writer(cancelFile)
     delayWriter = csv.writer(delayFile)
@@ -69,12 +94,21 @@ def run(input_args):
     with open(input_args.input_file, 'rb') as csvFile:
         lines=csv.reader(csvFile,delimiter=',')
         for line in lines:
+            if filt:
+                if line[Row.Origin.value] not in topAirports or line[Row.Dest.value] not in topAirports:
+                        continue
             featLine=\
-            line[:Row.DepTime.value]\
+            line[Row.DayOfMonth.value:Row.DepTime.value]\
             +line[Row.CRSDepTime.value:Row.ArrTime.value]\
-            +line[Row.CRSArrTime.value:Row.ActualElapsedTime.value]\
-            +line[Row.CRSElapsedTime.value:Row.ArrDelay.value]\
+            +line[Row.CRSArrTime.value:Row.FlightNum.value]\
+            +line[Row.CRSElapsedTime.value:Row.AirTime.value]\
             +line[Row.Origin.value:Row.TaxiIn.value]
+            #Convert the departure time to hour in day
+            featLine[2]= int(featLine[2])/100
+            #round down arrival time to hour in the day
+            featLine[3]= int(featLine[3])/100
+            #flight duration we can treat as linear
+            #flight distance we can treat as linear
             if stats:
                 statDict['cancelled']+=int(line[Row.Cancelled.value])
                 statDict['total']+=1
@@ -88,14 +122,15 @@ def run(input_args):
                 else:
                     statDict['otherCharOrigin']+=1
                 carrierDict[line[Row.UniqueCarrier.value]]+=1
-            counter+=1
-            if counter>=maxRow:
-                break
+            #write to feature file and store results in vectors
             featWriter.writerow(featLine)
             #add to cancel vector to write at end
             cancelVect.append(line[Row.Cancelled.value])
             #add to delay vector to write at end
             delayVect.append(line[Row.ArrDelay.value])
+            counter+=1
+            if counter>=maxRow:
+                break
         #print the 1 D cancel and delay values out
         cancelWriter.writerow(cancelVect)
         delayWriter.writerow(delayVect)
@@ -124,7 +159,8 @@ def run(input_args):
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help= "the local path to the input file to act on")
 parser.add_argument("output_file_base", help= "the local path to the output base name to write to")
-parser.add_argument("-s","--stats", help= "option to print out statistics of the input file",type=int)
+parser.add_argument("-s","--stats", help= "option to print out statistics of the input file",action="store_true")
 parser.add_argument("-t","--test", help= "test with only the given number of rows",type=int)
+parser.add_argument("-f","--filter", help= "filter for only the top airports",action="store_true")
 args = parser.parse_args()
 run(args)

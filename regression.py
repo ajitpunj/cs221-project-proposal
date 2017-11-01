@@ -1,4 +1,4 @@
-#import matplotlib.pyplot as plt
+31 #import matplotlib.pyplot as plt
 import argparse
 import csv
 import pandas as pd
@@ -13,27 +13,20 @@ def run(input_args):
     data= pd.read_csv(input_args.feature_file,header=None)
     #turn all 'NaN' values to 0
     data.fillna(0,inplace=True)
-    #encode every string as a numberical value for columns that have strings (like airline codes etc)
-    for column in data:
-        le = preprocessing.LabelEncoder()
-        if data[column].dtype == object:
-            le.fit(data[column])
-            data[column]=le.transform(data[column])
+    #split out columns into one hot
+    #nonlinear are dayofmonth,dayofweek,airline,origin,dest
+    nonLinearColumns=[0,1,4,6,7]
+    print data
+    data= pd.get_dummies(data,columns=nonLinearColumns)
+    print data
 
     features = data.as_matrix()
-    
     #results should all be numbers except for nan
     data = pd.read_csv(input_args.result_file,header=None)
     data.fillna(0,inplace=True)
     results = data.as_matrix()
     #reshape for skikit (NO IDEA WHY but ok...)
     results=results.reshape(-1,1)
-
-#    print type(features)
-#    print type(results)
-#    print features
-#    print features.shape
-#    print results.shape
 
     #create linear regression object
     regr = linear_model.LinearRegression()
