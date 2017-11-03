@@ -6,6 +6,7 @@ import numpy as np
 import os
 from sklearn import datasets,linear_model,preprocessing
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.cluster import KMeans
 
 def run(input_args):
     #read the inputs into numpy arrays
@@ -37,6 +38,13 @@ def run(input_args):
     predictions = regr.predict(features)
     print (predictions)
     print (regr.coef_)
+
+    #k-means
+    #shape of fit_predict input is n_samples,n_features
+    #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+    print 'k-means'
+    y_pred = KMeans(5, 'random').fit(results,features)
+    print y_pred.labels_
 
     #print "coefficients {}".format(regr.coef_)
     return
