@@ -58,16 +58,16 @@ def run(input_args):
         
     #dictionary for fast look up of top 10 airports
     topAirports = collections.defaultdict(int)
-    topAirports['ATL']=0
+#    topAirports['ATL']=0
     topAirports['LAX']=0
-    topAirports['ORD']=0
-    topAirports['DFW']=0
+#    topAirports['ORD']=0
+#    topAirports['DFW']=0
     topAirports['JFK']=0
-    topAirports['DEN']=0
-    topAirports['SFO']=0
-    topAirports['LAS']=0
-    topAirports['CLT']=0
-    topAirports['SEA']=0
+#    topAirports['DEN']=0
+#    topAirports['SFO']=0
+#    topAirports['LAS']=0
+#    topAirports['CLT']=0
+#    topAirports['SEA']=0
     
     stats=0
     cancelVect=[]
@@ -97,6 +97,10 @@ def run(input_args):
             if filt:
                 if line[Row.Origin.value] not in topAirports or line[Row.Dest.value] not in topAirports:
                         continue
+            if input_args.airline:
+                if line[Row.UniqueCarrier.value]!=input_args.airline:
+                    continue
+                
             featLine=\
             line[Row.DayOfMonth.value:Row.DepTime.value]\
             +line[Row.CRSDepTime.value:Row.ArrTime.value]\
@@ -104,9 +108,18 @@ def run(input_args):
             +line[Row.CRSElapsedTime.value:Row.AirTime.value]\
             +line[Row.Origin.value:Row.TaxiIn.value]
             #Convert the departure time to hour in day
-            featLine[2]= int(featLine[2])/100
+            if int(featLine[2])%100 >= 30:
+                featLine[2] = int(featLine[2])/100 + .5
+            else:
+                featLine[2] = int(featLine[2])/100
+                
+            #featLine[2]= int(featLine[2])/100 
             #round down arrival time to hour in the day
-            featLine[3]= int(featLine[3])/100
+            if int(featLine[3])%100 >= 30:
+                featLine[3] = int(featLine[3])/100 + .5
+            else:
+                featLine[3] = int(featLine[3])/100
+            #featLine[3]= int(featLine[3])/100
             #flight duration we can treat as linear
             #flight distance we can treat as linear
             if stats:
@@ -162,5 +175,6 @@ parser.add_argument("output_file_base", help= "the local path to the output base
 parser.add_argument("-s","--stats", help= "option to print out statistics of the input file",action="store_true")
 parser.add_argument("-t","--test", help= "test with only the given number of rows",type=int)
 parser.add_argument("-f","--filter", help= "filter for only the top airports",action="store_true")
+parser.add_argument("-a","--airline", help= "If specified, only flights provided by the given airline are included")
 args = parser.parse_args()
 run(args)
