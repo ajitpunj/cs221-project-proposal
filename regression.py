@@ -9,6 +9,7 @@ from sklearn.svm import SVR
 from sklearn import datasets,linear_model,preprocessing
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.cluster import KMeans
 
 
 #return a pandas data frame of the given csv file (local path)
@@ -164,6 +165,13 @@ def run(input_args):
     features = featureDF.as_matrix()    
     results = resultsDF.as_matrix()
 
+
+    #k-means
+    #shape of fit_predict input is n_samples,n_features
+    #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+    print 'k-means'
+    y_pred = KMeans(5, 'random').fit(results,features)
+    print y_pred.labels_
 
     if input_args.rbf:
         runRBFModel(features,results,input_args)
