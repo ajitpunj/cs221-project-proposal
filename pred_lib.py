@@ -9,6 +9,7 @@ from sklearn import datasets,linear_model,preprocessing
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
 
 #return a pandas data frame of the given csv file (local path)
 def CreateDF(filePath):
@@ -44,6 +45,27 @@ def getTrainedLinearModel(features,results):
     regr.fit(features,results)
     return regr
 
+def getTrainedSGDRegressorModel(features,results):
+    regr = linear_model.SGDRegressor(loss="squared_loss",penalty=None)
+    regr.n_iter = np.ceil(10**6/len(results))
+    regr.fit(features,results)
+    return regr
+
+def getTrainedSGDClassifierModel(features,results):
+    regr = linear_model.SGDClassifier(loss="hinge",penalty=None)
+    regr.n_iter = np.ceil(10**6/len(results))
+    regr.fit(features,results)
+    return regr
+
+def getTrainedRandomForestModel(features,results):
+    regr = RandomForestRegressor(n_jobs=2,random_state=0)
+    regr.fit(features,results)
+    return regr
+
+def getTrainedRandomForestClassifier(features,results):
+    regr = RandomForestClassifier(n_jobs=2,random_state=0)
+    regr.fit(features,results)
+    return regr
 #def trainPolyModel(features,results):
 
 #def trainRandomForestModel(features,results):
@@ -67,8 +89,6 @@ def printStats(predictions,actual):
     correctPositive=0
     correctNegative=0
 
-    print predictions[0]
-    print actual[0]    
     for x in range (0,len(predictions)):
         diff += abs(predictions[x]-actual[x])
         if predictions[x]<=0:
@@ -90,16 +110,19 @@ def printStats(predictions,actual):
         if predictions[x]>0 and actual[x]>0:
             correctPositive+=1
 
-    print diff
-    print len(predictions)
+    print "The R2 Score from the regression is {}".format(r2_score(actual,predictions))
+        
     print "The average difference between real and predicted is {}".format(diff/len(predictions))
-    print "correct positive predictions {} correctPos/real {}".format(correctPositive,correctPositive /(1.0*realDelayed))
-    
-    print "correct negative predictions {} correctNeg/real {}".format(correctNegative,correctNegative/(1.0*realNotDelayed))
+    if realDelayed>0:
+        print "correct positive predictions {} correctPos/real {}".format(correctPositive,correctPositive /(1.0*realDelayed))
+    if realNotDelayed>0:
+        print "correct negative predictions {} correctNeg/real {}".format(correctNegative,correctNegative/(1.0*realNotDelayed))
 
-    print "false positives (predicted to happen but didnt) {} percent of predicted that were wrong {}".format(falsePositives,falsePositives/(1.0*predDelayed))
+    if predDelayed >0:
+        print "false positives (predicted to happen but didnt) {} percent of predicted that were wrong {}".format(falsePositives,falsePositives/(1.0*predDelayed))
 
-    print "false negatives actually happend but predicted to be ok) {} percent of not predicted that were wrong {}".format(falseNegatives,falseNegatives/(1.0*predNotDelayed))
+    if predNotDelayed>0:
+        print "false negatives actually happend but predicted to be ok) {} percent of not predicted that were wrong {}".format(falseNegatives,falseNegatives/(1.0*predNotDelayed))
 
     return
         

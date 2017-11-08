@@ -21,8 +21,6 @@ def runLinearModel(features,results,input_args):
 
     predictions = regr.predict(features)
     
-    #Print the R2 Score
-    print "The R2 Score from the regression is {}".format(r2_score(results,predictions))
     #average difference
     Xval=[]
     Yval=[]
@@ -36,7 +34,61 @@ def runLinearModel(features,results,input_args):
     pred_lib.printStats(predictions,results)
 
     if input_args.plot:
-        pred_lib.plotResults(Xval,Yval)               
+        pred_lib.plotResults(Xval,Yval)
+
+def runSGDModel(features,results,input_args):
+    results = pred_lib.reshape_results(results)
+    if input_args.classifier:
+        regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel())
+    else:
+        regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel())
+
+    predictions = regr.predict(features)
+    
+    
+    #Print the R2 Score
+
+    #average difference
+    Xval=[]
+    Yval=[]
+    #There has got to be a better way to convert the predictions vector that gets returned to be clean for plotting....
+    for x in range (0,len(predictions)):
+        if input_args.plot:
+            Xval.append(predictions[x])
+            Yval.append(results[x])
+
+
+    pred_lib.printStats(predictions,results)
+
+    if input_args.plot:
+        pred_lib.plotResults(Xval,Yval)
+
+def runRandomForestModel(features,results,input_args):
+    results = pred_lib.reshape_results(results)
+    if input_args.classifier:
+        regr = pred_lib.getTrainedRandomForestClassifier(features,results.ravel())
+    else:
+        regr = pred_lib.getTrainedRandomForestModel(features,results.ravel())
+
+    predictions = regr.predict(features)
+    
+    
+    #Print the R2 Score
+
+    #average difference
+    Xval=[]
+    Yval=[]
+    #There has got to be a better way to convert the predictions vector that gets returned to be clean for plotting....
+    for x in range (0,len(predictions)):
+        if input_args.plot:
+            Xval.append(predictions[x])
+            Yval.append(results[x])
+
+
+    pred_lib.printStats(predictions,results)
+
+    if input_args.plot:
+        pred_lib.plotResults(Xval,Yval)
 
     
 def runRBFModel(features,results,input_args):
@@ -94,8 +146,12 @@ def run(input_args):
     results = resultsDF.as_matrix()
 
     
-    if input_args.rbf:
-        runRBFModel(features,results,input_args)
+#    if input_args.rbf:
+#        runRBFModel(features,results,input_args)
+    if input_args.sgd:
+        runSGDModel(features,results,input_args)
+    elif input_args.randomforest:
+        runRandomForestModel(features,results,input_args)
     else:
         runLinearModel(features,results,input_args)
         
@@ -116,8 +172,10 @@ parser.add_argument("feature_file", help= "the local path to the feature file. A
 parser.add_argument("result_file", help= "the local path to the file containing the 1D vector of results pertaining to the features")
 parser.add_argument("-l","--linearize", help= "flag to linearize object column data instead of splitting columns out into indicator feature vectors",action="store_true")
 #parser.add_argument("-o","--output_file", help= "If you want to print results to an output file, give a path")
-parser.add_argument("-p","--plot", help= "plot predicted to actual",action="store_true")
-parser.add_argument("-r","--rbf", help= "use an RBF kernel regression model instead of linear",action="store_true")
-parser.add_argument("-c","--cutoff", help= "cutoff value, anything over this value is predicted as delayed / canceled. 0 if not specified",type=float)
+parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="store_true")
+#parser.add_argument("-r","--rbf", help= "use an RBF kernel regression model instead of linear",action="store_true")
+parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")
+parser.add_argument("-rf","--randomforest", help= "use random forest regression",action="store_true")
+parser.add_argument("-c","--classifier", help= "use a classifier instead of a regressor. Either sgd or random forest must also be specified and should be used for cancellations not delays",action="store_true")
 args = parser.parse_args()
 run(args)
