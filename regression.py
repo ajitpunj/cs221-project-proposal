@@ -10,7 +10,7 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.cluster import KMeans
 import pred_lib
-
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -38,6 +38,11 @@ def runLinearModel(features,results,input_args):
 
 def runSGDModel(features,results,input_args):
     results = pred_lib.reshape_results(results)
+    #need to scale the input features for SGD, algorithm sensitive
+    scaler = StandardScaler()
+    scaler.fit(features)
+    features = scaler.transform(features)
+    
     if input_args.classifier:
         regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel())
     else:

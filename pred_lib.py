@@ -11,6 +11,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
 
+
 #return a pandas data frame of the given csv file (local path)
 def CreateDF(filePath):
     return pd.read_csv(filePath,header=None)
@@ -47,13 +48,14 @@ def getTrainedLinearModel(features,results):
 
 def getTrainedSGDRegressorModel(features,results):
     regr = linear_model.SGDRegressor(loss="squared_loss",penalty=None)
-    regr.n_iter = np.ceil(10**6/len(results))
+    regr.n_iter = np.ceil(10**6/len(results))#deprecated
+    #need to scale the features    
     regr.fit(features,results)
     return regr
 
 def getTrainedSGDClassifierModel(features,results):
     regr = linear_model.SGDClassifier(loss="hinge",penalty=None)
-    regr.n_iter = np.ceil(10**6/len(results))
+    regr.n_iter = np.ceil(10**6/len(results))#deprecated
     regr.fit(features,results)
     return regr
 
