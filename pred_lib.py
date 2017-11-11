@@ -72,8 +72,13 @@ def getTrainedRandomForestClassifier(features,results):
 
 #def trainRandomForestModel(features,results):
 
-def plotResults(predictions,actual):
+def plotResults(predictions,actual,title=None):
     fig,ax =plt.subplots()
+    if title != None:
+        plt.title(title)
+    else:
+        plt.title('Predicted Values vs Actual')
+        
     ax.plot(predictions,actual,'bo')
     ax.set_xlabel("Predictions")
     ax.set_ylabel("Actual")

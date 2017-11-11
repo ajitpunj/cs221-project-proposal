@@ -34,7 +34,7 @@ def runLinearModel(features,results,input_args):
     pred_lib.printStats(predictions,results)
 
     if input_args.plot:
-        pred_lib.plotResults(Xval,Yval)
+        pred_lib.plotResults(Xval,Yval,input_args.plot_title)
 
 def runSGDModel(features,results,input_args):
     results = pred_lib.reshape_results(results)
@@ -66,7 +66,7 @@ def runSGDModel(features,results,input_args):
     pred_lib.printStats(predictions,results)
 
     if input_args.plot:
-        pred_lib.plotResults(Xval,Yval)
+        pred_lib.plotResults(Xval,Yval,input_args.plot_title)
 
 def runRandomForestModel(features,results,input_args):
     results = pred_lib.reshape_results(results)
@@ -93,7 +93,7 @@ def runRandomForestModel(features,results,input_args):
     pred_lib.printStats(predictions,results)
 
     if input_args.plot:
-        pred_lib.plotResults(Xval,Yval)
+        pred_lib.plotResults(Xval,Yval,input_args.plot_title)
 
     
 def runRBFModel(features,results,input_args):
@@ -123,7 +123,7 @@ def runRBFModel(features,results,input_args):
             
         
     if input_args.plot:
-        pred_lib.plotResults(xVal_ply,yVal_ply)
+        pred_lib.plotResults(xVal_ply,yVal_ply,input_args.plot_title)
     
 def run(input_args):
     #read the inputs into numpy arrays
@@ -182,5 +182,6 @@ parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="stor
 parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")
 parser.add_argument("-rf","--randomforest", help= "use random forest regression",action="store_true")
 parser.add_argument("-c","--classifier", help= "use a classifier instead of a regressor. Either sgd or random forest must also be specified and should be used for cancellations not delays",action="store_true")
+parser.add_argument("-pt","--plot_title", help= "title for generated plot")
 args = parser.parse_args()
 run(args)
