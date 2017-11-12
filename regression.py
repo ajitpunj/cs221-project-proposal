@@ -12,8 +12,65 @@ from sklearn.cluster import KMeans
 import pred_lib
 from sklearn.preprocessing import StandardScaler
 
+globaldiff=0
+globalpredDelayed=0
+globalrealDelayed=0
+globalpredNotDelayed=0
+globalrealNotDelayed=0
+globalfalsePositives=0
+globalfalseNegatives=0
+globalcorrectPositive=0
+globalcorrectNegative=0
+globalpredictionLen=0
+def updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen):
+    global globaldiff
+    global globalpredDelayed
+    global globalrealDelayed
+    global globalpredNotDelayed
+    global globalrealNotDelayed
+    global globalfalsePositives
+    global globalfalseNegatives
+    global globalcorrectPositive
+    global globalcorrectNegative
+    global globalpredictionLen
 
+    globaldiff += diff
+    globalpredDelayed+=predDelayed
+    globalrealDelayed+=realDelayed
+    globalpredNotDelayed+=predNotDelayed
+    globalrealNotDelayed+=realNotDelayed
+    globalfalsePositives+=falsePositives
+    globalfalseNegatives+=falseNegatives
+    globalcorrectPositive+=correctPositive
+    globalcorrectNegative+=correctNegative
+    globalpredictionLen+=predictionLen
 
+def runKMeans(features,results,n_samples,input_args):
+    #k-means
+    #shape of fit_predict input is n_samples,n_features
+    #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+    print 'k-means'
+    results = pred_lib.reshape_results(results)
+    X = np.matrix(zip(results,features))
+    y_pred = KMeans(n_samples, 'random').fit(features)
+    totalPred = []
+    totalRes = []
+    for n in range(0,n_samples):
+        print 'run number ',n
+        feat = []
+        res = []
+        for y in range(len(y_pred.labels_)):
+            if n == y_pred.labels_[y]:
+                feat.append(features[y])
+                res.append(results[y])
+        runLinearModel(np.matrix(feat), np.matrix(res),input_args)
+    print "AGGREGATE STATS FOR K MEANS"
+    pred_lib.printAggregateStats(globaldiff,globalpredDelayed,globalrealDelayed,globalpredNotDelayed,globalrealNotDelayed,globalfalsePositives,globalfalseNegatives,globalcorrectPositive,globalcorrectNegative,globalpredictionLen)
+
+    #add cluster number to features vector:
+    # labels = y_pred.labels_
+    # labels = np.reshape(labels,(1,-1))
+    # newFeatures = np.matrix(zip(features,labels))
 
 def runLinearModel(features,results,input_args):
     results = pred_lib.reshape_results(results)
@@ -31,7 +88,8 @@ def runLinearModel(features,results,input_args):
             Yval.append(results[x][0])
 
 
-    pred_lib.printStats(predictions,results)
+    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
+    updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
 
     if input_args.plot:
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
@@ -157,18 +215,11 @@ def run(input_args):
         runSGDModel(features,results,input_args)
     elif input_args.randomforest:
         runRandomForestModel(features,results,input_args)
+    elif input_args.kmeans:
+        #TODO get n_samples another way
+        runKMeans(features,results,10,input_args)
     else:
         runLinearModel(features,results,input_args)
-        
-
-    #k-means
-    #shape of fit_predict input is n_samples,n_features
-    #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-    #TODO can we put the k-means stuff in its own function or something? or maybe its own script that produces multiple csv files we can run regressions on?
-    print 'k-means'
-    results = results.reshape(-1,1)
-    y_pred = KMeans(5, 'random').fit(results,features)
-    print y_pred.labels_
 
     return
 
@@ -178,6 +229,7 @@ parser.add_argument("result_file", help= "the local path to the file containing 
 parser.add_argument("-l","--linearize", help= "flag to linearize object column data instead of splitting columns out into indicator feature vectors",action="store_true")
 #parser.add_argument("-o","--output_file", help= "If you want to print results to an output file, give a path")
 parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="store_true")
+parser.add_argument("-k","--kmeans", help= "use kmeans then linear regression on clusters",action="store_true")
 #parser.add_argument("-r","--rbf", help= "use an RBF kernel regression model instead of linear",action="store_true")
 parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")
 parser.add_argument("-rf","--randomforest", help= "use random forest regression",action="store_true")

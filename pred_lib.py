@@ -85,6 +85,7 @@ def plotResults(predictions,actual,title=None):
     fig.show()    
     plt.show()
 
+
 def printStats(predictions,actual):
     diff = 0
     predDelayed=0
@@ -131,5 +132,18 @@ def printStats(predictions,actual):
     if predNotDelayed>0:
         print "false negatives actually happend but predicted to be ok) {} percent of not predicted that were wrong {}".format(falseNegatives,falseNegatives/(1.0*predNotDelayed))
 
-    return
+    return diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative, len(predictions)
         
+def printAggregateStats(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen):
+    print "The average difference between real and predicted is {}".format(diff/predictionLen)
+    if realDelayed>0:
+        print "correct positive predictions {} correctPos/real {}".format(correctPositive,correctPositive /(1.0*realDelayed))
+    if realNotDelayed>0:
+        print "correct negative predictions {} correctNeg/real {}".format(correctNegative,correctNegative/(1.0*realNotDelayed))
+
+    if predDelayed >0:
+        print "false positives (predicted to happen but didnt) {} percent of predicted that were wrong {}".format(falsePositives,falsePositives/(1.0*predDelayed))
+
+    if predNotDelayed>0:
+        print "false negatives actually happend but predicted to be ok) {} percent of not predicted that were wrong {}".format(falseNegatives,falseNegatives/(1.0*predNotDelayed))
+
