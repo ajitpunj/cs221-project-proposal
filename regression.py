@@ -121,7 +121,8 @@ def runSGDModel(features,results,input_args):
             Yval.append(results[x])
 
 
-    pred_lib.printStats(predictions,results)
+    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
+    updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
 
     if input_args.plot:
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
@@ -148,7 +149,8 @@ def runRandomForestModel(features,results,input_args):
             Yval.append(results[x])
 
 
-    pred_lib.printStats(predictions,results)
+    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
+    updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
 
     if input_args.plot:
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
