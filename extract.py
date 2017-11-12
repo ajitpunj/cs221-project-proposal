@@ -58,10 +58,10 @@ def run(input_args):
         
     #dictionary for fast look up of top 10 airports
     topAirports = collections.defaultdict(int)
-#    topAirports['ATL']=0
+    topAirports['ATL']=0
     topAirports['LAX']=0
-#    topAirports['ORD']=0
-#    topAirports['DFW']=0
+    topAirports['ORD']=0
+    topAirports['DFW']=0
     topAirports['JFK']=0
 #    topAirports['DEN']=0
 #    topAirports['SFO']=0
