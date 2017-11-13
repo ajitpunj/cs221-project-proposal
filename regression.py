@@ -104,7 +104,10 @@ def runSGDModel(features,results,testFeatures,testResults,input_args):
     scaler = StandardScaler()
     scaler.fit(features)
     features = scaler.transform(features)
-    testFeatures = scaler.transform(testFeatures)
+
+    if input_args.test_features !=None:
+        scaler.fit(testFeatures)
+        testFeatures = scaler.transform(testFeatures)
     
     if input_args.classifier:
         regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
@@ -141,9 +144,10 @@ def runRandomForestModel(features,results,testFeatures,testResults,input_args):
 
     #Scale all input features
     scaler = StandardScaler()
-    scaler.fit(features)
+    scaler.fit(features)    
     features = scaler.transform(features)
-    testFeatures = scaler.transform(testFeatures)
+    if input_args.test_features!=None:
+        testFeatures = scaler.transform(testFeatures)
     
     if input_args.classifier:
         regr = pred_lib.getTrainedRandomForestClassifier(features,results.ravel(),input_args.grid_search)        
