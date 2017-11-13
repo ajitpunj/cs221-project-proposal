@@ -106,9 +106,9 @@ def runSGDModel(features,results,testFeatures,testResults,input_args):
     features = scaler.transform(features)
     
     if input_args.classifier:
-        regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel())
+        regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
     else:
-        regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel())
+        regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel(),input_args.grid_search)
 
     if input_args.test_features != None and input_args.test_results != None:
         predictions = regr.predict(testFeatures)
@@ -138,9 +138,9 @@ def runSGDModel(features,results,testFeatures,testResults,input_args):
 def runRandomForestModel(features,results,testFeatures,testResults,input_args):
     results = pred_lib.reshape_results(results)
     if input_args.classifier:
-        regr = pred_lib.getTrainedRandomForestClassifier(features,results.ravel())        
+        regr = pred_lib.getTrainedRandomForestClassifier(features,results.ravel(),input_args.grid_search)        
     else:
-        regr = pred_lib.getTrainedRandomForestModel(features,results.ravel())
+        regr = pred_lib.getTrainedRandomForestModel(features,results.ravel(),input_args.grid_search)
     
 
     if input_args.test_features != None and input_args.test_results != None:
@@ -196,6 +196,8 @@ def runRBFModel(features,results,input_args):
         pred_lib.plotResults(xVal_ply,yVal_ply,input_args.plot_title)
     
 def run(input_args):
+    #nonlinear are dayofmonth,dayofweek,airline,origin,dest
+    nonLinearColumns=[0,1,4,6,7]
     #read the inputs into numpy arrays
     featureDF=pred_lib.CreateDF(input_args.feature_file)
     #turn all 'NaN' values to 0
@@ -206,8 +208,6 @@ def run(input_args):
         featureDF = pred_lib.LinearizeFeatures(featureDF)
     #otherwise we split nonlinear columns out into one hot 
     else:
-        #nonlinear are dayofmonth,dayofweek,airline,origin,dest
-        nonLinearColumns=[0,1,4,6,7]
         featureDF = pred_lib.IndicatorFeatures(featureDF,nonLinearColumns)
 
     #print featureDF
@@ -221,7 +221,6 @@ def run(input_args):
         #read in a process the test features
         testFeatures=pred_lib.CreateDF(input_args.test_features)
         pred_lib.RemoveNA(testFeatures,0)
-        nonLinearColumns=[0,1,4,6,7]
         testFeatures = pred_lib.IndicatorFeatures(testFeatures,nonLinearColumns)
         
         #overwrite result vector with test results not training results
@@ -272,6 +271,7 @@ parser.add_argument("-rf","--randomforest", help= "use random forest regression"
 parser.add_argument("-c","--classifier", help= "use a classifier instead of a regressor. Either sgd or random forest must also be specified and should be used for cancellations not delays",action="store_true")
 parser.add_argument("-pt","--plot_title", help= "title for generated plot")
 parser.add_argument("-tf","--test_features", help= "path to CSV for test features to predict using trained model")
-parser.add_argument("-tr","--test_results", help= "path to CSV for test results for comparison to predicted")
+parser.add_argument("-tr","--test_results", help= "path to CSV for test results to compare to prediction using trained model")
+parser.add_argument("-gs","--grid_search", help= "run grid search to tune model parameters and print best results",action="store_true")
 args = parser.parse_args()
 run(args)

@@ -6,11 +6,10 @@ import os
 import matplotlib.pyplot as plt
 from sklearn.svm import SVR
 from sklearn import datasets,linear_model,preprocessing
-from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import cross_val_predict, GridSearchCV
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
-
 
 #return a pandas data frame of the given csv file (local path)
 def CreateDF(filePath):
@@ -61,26 +60,66 @@ def getTrainedLinearModel(features,results):
     regr.fit(features,results)
     return regr
 
-def getTrainedSGDRegressorModel(features,results):
+def getTrainedSGDRegressorModel(features,results,gs=0):
+    param_grid={
+        'loss':['squared_loss','huber','squared_epsilon_insensitive'],
+        'penalty':['none','l2','l1'],
+        'learning_rate':['constant','optimal','invscaling']
+    }
     regr = linear_model.SGDRegressor(loss="squared_loss",penalty=None)
     regr.n_iter = np.ceil(10**6/len(results))#deprecated
+    if gs:
+        CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
+        CVregr.fit(features,results)
+        print "best parameters"
+        print CVregr.best_params_
     #need to scale the features    
     regr.fit(features,results)
     return regr
 
-def getTrainedSGDClassifierModel(features,results):
+def getTrainedSGDClassifierModel(features,results,gs=0):
+    param_grid={
+        'loss':['squared_loss','huber','squared_epsilon_insensitive'],
+        'penalty':['none','l2','l1'],
+        'learning_rate':['constant','optimal','invscaling']
+    }
     regr = linear_model.SGDClassifier(loss="hinge",penalty=None)
+    if gs:
+        CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
+        CVregr.fit(features,results)
+        print "best parameters"
+        print CVregr.best_params_
     regr.n_iter = np.ceil(10**6/len(results))#deprecated
     regr.fit(features,results)
     return regr
 
-def getTrainedRandomForestModel(features,results):
-    regr = RandomForestRegressor(n_jobs=2,random_state=0)
+def getTrainedRandomForestModel(features,results,gs=0):
+    param_grid ={
+        'n_estimators': [200,500,700,1000],
+        'max_features':['auto','sqrt','log2'],
+        'criterion' : ['mse','mae']
+    }    
+    regr = RandomForestRegressor(n_jobs=-1,random_state=0)
+    if gs:
+        CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
+        CVregr.fit(features,results)
+        print "best parameters"
+        print CVregr.best_params_
     regr.fit(features,results)
     return regr
 
-def getTrainedRandomForestClassifier(features,results):
+def getTrainedRandomForestClassifier(features,results,gs=0):
     regr = RandomForestClassifier(n_jobs=2,random_state=0)
+    param_grid ={
+        'n_estimators': [200,500,700,1000],
+        'max_features':['auto','sqrt','log2'],
+        'criterion' : ['mse','mae']
+    }
+    if gs:
+        CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
+        CVregr.fit(features,results)
+        print "best parameters"
+        print CVregr.best_params_
     regr.fit(features,results)
     return regr
 #def trainPolyModel(features,results):
