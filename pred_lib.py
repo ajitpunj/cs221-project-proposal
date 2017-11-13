@@ -66,7 +66,7 @@ def getTrainedSGDRegressorModel(features,results,gs=0):
         'penalty':['none','l2','l1'],
         'learning_rate':['constant','optimal','invscaling']
     }
-    regr = linear_model.SGDRegressor(loss="squared_loss",penalty=None)
+    regr = linear_model.SGDRegressor(loss='squared_loss',penalty='l1',learning_rate='invscaling')
     regr.n_iter = np.ceil(10**6/len(results))#deprecated
     if gs:
         CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
