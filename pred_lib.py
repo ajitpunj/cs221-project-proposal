@@ -34,6 +34,21 @@ def LinearizeFeatures(df):
             df[column]=preprocessing.LabelEncoder().fit_transform(df[column])
     return df
 
+def MatchTrainingToTest(trainingFeat,testingFeat):
+    for column in testingFeat:
+        if column not in trainingFeat:
+            #these are all indicator, so set to 0
+            trainingFeat.insert(0,column,0.0)
+
+    for column in trainingFeat:
+        if column not in testingFeat:
+            testingFeat.insert(0,column,0.0)
+
+    #reorder all of them so they match
+    trainingFeat=trainingFeat.reindex_axis(sorted(trainingFeat.columns),axis=1)
+    testingFeat=testingFeat.reindex_axis(sorted(testingFeat.columns),axis=1)
+    return (trainingFeat,testingFeat)
+    
 #For some reason we need to reshape our 1D results vector for scikit
 def reshape_results(results):
     return results.reshape(-1,1)
