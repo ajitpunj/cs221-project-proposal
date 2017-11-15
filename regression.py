@@ -197,7 +197,12 @@ def run(input_args):
     else:#otherwise we split nonlinear columns out into one hot 
         featureDF = pred_lib.IndicatorFeatures(featureDF,nonLinearColumns)
 
-
+    #scale all of the features#
+    scaler=StandardScaler()
+#    scaler=MinMaxScaler()
+    featureDF_scaled=scaler.fit_transform(featureDF)
+    featureDF = pd.DataFrame(featureDF_scaled)
+    
     #read all the results into a dataframe
     resultsDF = pred_lib.CreateDF(input_args.result_file)   
     
@@ -205,15 +210,8 @@ def run(input_args):
     #turn 1xn into nx1
     resultsDF = resultsDF.transpose()
 
-    #add the results as a column    
-    featureDF['results'] = resultsDF
-    
-    #scale everything
-    scaler = StandardScaler()
-    featureDF_scaled = scaler.fit_transform(featureDF)
-    #convert numpy back to pandas
-    featureDF = pd.DataFrame(featureDF_scaled)
-
+    #add the results as a column at the end  
+    featureDF[len(featureDF.columns)] = resultsDF      
     #shuffle everything
     featureDF = featureDF.sample(frac=1,random_state=500).reset_index(drop=True)
 
