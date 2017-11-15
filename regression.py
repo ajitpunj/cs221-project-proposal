@@ -10,7 +10,7 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.cluster import KMeans
 import pred_lib
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 globaldiff=0
 globalpredDelayed=0
@@ -50,7 +50,6 @@ def runKMeans(features,results,n_samples,input_args):
     #shape of fit_predict input is n_samples,n_features
     #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     print 'k-means'
-    results = pred_lib.reshape_results(results)
     X = np.matrix(zip(results,features))
     y_pred = KMeans(n_samples, 'random').fit(features)
     totalPred = []
@@ -69,16 +68,14 @@ def runKMeans(features,results,n_samples,input_args):
 
     #add cluster number to features vector:
     # labels = y_pred.labels_
-    # labels = np.reshape(labels,(1,-1))
     # newFeatures = np.matrix(zip(features,labels))
 
 def runLinearModel(features,results,testFeatures,testResults,input_args):
-    results = pred_lib.reshape_results(results)
     regr = pred_lib.getTrainedLinearModel(features,results)
 
-    if input_args.test_features != None and input_args.test_results != None:
+    if input_args.test:
         predictions = regr.predict(testFeatures)
-        results = pred_lib.reshape_results(testResults)
+        results = testResults
     else:
         predictions = regr.predict(features)
     
@@ -88,8 +85,8 @@ def runLinearModel(features,results,testFeatures,testResults,input_args):
     #There has got to be a better way to convert the predictions vector that gets returned to be clean for plotting....
     for x in range (0,len(predictions)):
         if input_args.plot:
-            Xval.append(predictions[x][0])
-            Yval.append(results[x][0])
+            Xval.append(predictions[x])
+            Yval.append(results[x])
 
 
     diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
@@ -99,30 +96,20 @@ def runLinearModel(features,results,testFeatures,testResults,input_args):
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
 
 def runSGDModel(features,results,testFeatures,testResults,input_args):
-    results = pred_lib.reshape_results(results)
     #need to scale the input features for SGD, algorithm sensitive
-    scaler = StandardScaler()
-    scaler.fit(features)
-    features = scaler.transform(features)
-
-    if input_args.test_features !=None:
-        scaler.fit(testFeatures)
-        testFeatures = scaler.transform(testFeatures)
     
     if input_args.classifier:
         regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
     else:
         regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel(),input_args.grid_search)
 
-    if input_args.test_features != None and input_args.test_results != None:
+    if input_args.test:
         predictions = regr.predict(testFeatures)
-        results = pred_lib.reshape_results(testResults)
+        results = testResults
     else:
         predictions = regr.predict(features)
     
     
-    #Print the R2 Score
-
     #average difference
     Xval=[]
     Yval=[]
@@ -140,27 +127,18 @@ def runSGDModel(features,results,testFeatures,testResults,input_args):
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
 
 def runRandomForestModel(features,results,testFeatures,testResults,input_args):
-    results = pred_lib.reshape_results(results)
 
-    #Scale all input features
-    scaler = StandardScaler()
-    scaler.fit(features)    
-    features = scaler.transform(features)
-    if input_args.test_features!=None:
-        testFeatures = scaler.transform(testFeatures)
-    
     if input_args.classifier:
-        regr = pred_lib.getTrainedRandomForestClassifier(features,results.ravel(),input_args.grid_search)        
+        regr = pred_lib.getTrainedRandomForestClassifier(features,results,input_args.grid_search)        
     else:
-        regr = pred_lib.getTrainedRandomForestModel(features,results.ravel(),input_args.grid_search)
+        regr = pred_lib.getTrainedRandomForestModel(features,results,input_args.grid_search)
     
-
-    if input_args.test_features != None and input_args.test_results != None:
+    if input_args.test:
         predictions = regr.predict(testFeatures)
-        results = pred_lib.reshape_results(testResults)
+        results = testResults        
     else:
         predictions = regr.predict(features)
-        
+
     #average difference
     Xval=[]
     Yval=[]
@@ -181,7 +159,6 @@ def runRandomForestModel(features,results,testFeatures,testResults,input_args):
 def runRBFModel(features,results,input_args):
     regr_ply = SVR(kernel='poly',C=1e3,degree=2)
 #    regr_rbf = SVR(kernel='rbf',C=1e3,gamma=0.1)
-    results = results.reshape(-1,1)
     y_ply=regr_ply.fit(features,results.ravel())
 #    y_rbf=regr_rbf.fit(features,results.ravel())
     predictions = regr_ply.predict(features)    
@@ -210,54 +187,63 @@ def runRBFModel(features,results,input_args):
 def run(input_args):
     #nonlinear are dayofmonth,dayofweek,airline,origin,dest
     nonLinearColumns=[0,1,4,6,7]
-    #read the inputs into numpy arrays
-    featureDF=pred_lib.CreateDF(input_args.feature_file)
-    #turn all 'NaN' values to 0
-    pred_lib.RemoveNA(featureDF,0)
-    #print featureDF
+    
+    #read all the features into a dataframe
+    featureDF=pred_lib.CreateDF(input_args.feature_file)    
+    
     #if the flag is set for linearize, the do that
     if input_args.linearize:
-        featureDF = pred_lib.LinearizeFeatures(featureDF)
-    #otherwise we split nonlinear columns out into one hot 
-    else:
+        featureDF = pred_lib.LinearizeFeatures(featureDF)        
+    else:#otherwise we split nonlinear columns out into one hot 
         featureDF = pred_lib.IndicatorFeatures(featureDF,nonLinearColumns)
 
-    #print featureDF
 
-    #read in all the results
-    resultsDF = pred_lib.CreateDF(input_args.result_file)
-    pred_lib.RemoveNA(resultsDF,0)
-
-    #if given, read in all the test Features and test Results
-    if input_args.test_features!=None and input_args.test_results!=None:
-        #read in a process the test features
-        testFeatures=pred_lib.CreateDF(input_args.test_features)
-        pred_lib.RemoveNA(testFeatures,0)
-        testFeatures = pred_lib.IndicatorFeatures(testFeatures,nonLinearColumns)
-        
-        #overwrite result vector with test results not training results
-        testResults=pred_lib.CreateDF(input_args.test_results)
-        pred_lib.RemoveNA(testResults,0)
-
-        #now we need to go through and make sure columns match
-        #of one df has a column the others dont then we need to add it
-        #then we need to make sure all the columns are in the same order
-
-        featureDF,testFeatures = pred_lib.MatchTrainingToTest(featureDF,testFeatures)
-        testFeat = testFeatures.as_matrix()
-        testRes = testResults.as_matrix()
-    else:
-        testFeat = None
-        testRes = None
-
-
-    #convert to matrices for scikit
-    features = featureDF.as_matrix()    
-    results = resultsDF.as_matrix()
-
+    #read all the results into a dataframe
+    resultsDF = pred_lib.CreateDF(input_args.result_file)   
     
-#    if input_args.rbf:
-#        runRBFModel(features,results,input_args)
+    #pred_lib.RemoveNA(resultsDF,0)
+    #turn 1xn into nx1
+    resultsDF = resultsDF.transpose()
+
+    #add the results as a column    
+    featureDF['results'] = resultsDF
+    
+    #scale everything
+    scaler = StandardScaler()
+    featureDF_scaled = scaler.fit_transform(featureDF)
+    #convert numpy back to pandas
+    featureDF = pd.DataFrame(featureDF_scaled)
+
+    #shuffle everything
+    featureDF = featureDF.sample(frac=1,random_state=500).reset_index(drop=True)
+
+    #TODO can edit this when doing validation to split differently
+    cutoff = int(len(featureDF) *.9)
+    trainingDF = featureDF[:cutoff]
+    testDF = featureDF[cutoff:]
+
+    resultsCol = len(trainingDF.columns)-1
+    results = trainingDF[resultsCol]
+    features = trainingDF.drop(trainingDF.columns[resultsCol],axis=1)
+
+    results = results.as_matrix()
+    features = features.as_matrix()
+
+    if input_args.test:
+        resultsCol = len(testDF.columns)-1
+        testRes = testDF[resultsCol]
+        testFeat =  testDF.drop(testDF.columns[resultsCol],axis=1)
+        testRes = testRes.as_matrix()
+        testFeat = testFeat.as_matrix()
+    else:
+        testRes=None
+        testFeat=None
+
+    #Everything needs the results reshaped so far
+    results = pred_lib.reshape_results(results).ravel()
+    if input_args.test:
+        testRes = pred_lib.reshape_results(testRes).ravel()
+
     if input_args.sgd:
         runSGDModel(features,results,testFeat,testRes,input_args)
     elif input_args.randomforest:
@@ -277,13 +263,11 @@ parser.add_argument("-l","--linearize", help= "flag to linearize object column d
 #parser.add_argument("-o","--output_file", help= "If you want to print results to an output file, give a path")
 parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="store_true")
 parser.add_argument("-k","--kmeans", help= "use kmeans then linear regression on clusters",action="store_true")
-#parser.add_argument("-r","--rbf", help= "use an RBF kernel regression model instead of linear",action="store_true")
 parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")
 parser.add_argument("-rf","--randomforest", help= "use random forest regression",action="store_true")
 parser.add_argument("-c","--classifier", help= "use a classifier instead of a regressor. Either sgd or random forest must also be specified and should be used for cancellations not delays",action="store_true")
 parser.add_argument("-pt","--plot_title", help= "title for generated plot")
-parser.add_argument("-tf","--test_features", help= "path to CSV for test features to predict using trained model")
-parser.add_argument("-tr","--test_results", help= "path to CSV for test results to compare to prediction using trained model")
-parser.add_argument("-gs","--grid_search", help= "run grid search to tune model parameters and print best results",action="store_true")
+parser.add_argument("-t","--test", help= "predict test data against trained data",action="store_true")
+parser.add_argument("-gt","--grid_search",help="use grid search to optimize parameters for the given model and feature set")                    
 args = parser.parse_args()
 run(args)

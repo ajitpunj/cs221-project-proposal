@@ -1,3 +1,4 @@
+
 import csv
 import argparse
 import glob
@@ -70,18 +71,22 @@ def run(input_args):
 #    topAirports['SEA']=0
     
     stats=0
+    invalidCount=0
     cancelVect=[]
     delayVect=[]
     featLine=[]
-    featFileName = input_args.output_file_base + "_features.csv"
+    delayFeatFileName = input_args.output_file_base + "_delayfeatures.csv"
+    cancelFeatFileName = input_args.output_file_base + "_cancelfeatures.csv"
     cancelFileName = input_args.output_file_base + "_cancels.csv"
     delayFileName = input_args.output_file_base + "_delays.csv"
     
-    featFile = open(featFileName,'wb')
+    delayFeatFile = open(delayFeatFileName,'wb')
+    cancelFeatFile = open(cancelFeatFileName,'wb')
     cancelFile = open(cancelFileName,'wb')
     delayFile = open(delayFileName,'wb')
     #create all the output files to write to
-    featWriter = csv.writer(featFile)
+    delayFeatWriter = csv.writer(delayFeatFile)
+    cancelFeatWriter = csv.writer(cancelFeatFile)
     cancelWriter = csv.writer(cancelFile)
     delayWriter = csv.writer(delayFile)
     #keep track of stats if specified
@@ -96,17 +101,22 @@ def run(input_args):
         for line in lines:
             if filt:
                 if line[Row.Origin.value] not in topAirports or line[Row.Dest.value] not in topAirports:
-                        continue
+                    continue
             if input_args.airline:
                 if line[Row.UniqueCarrier.value]!=input_args.airline:
                     continue
-                
+
             featLine=\
             line[Row.DayOfMonth.value:Row.DepTime.value]\
             +line[Row.CRSDepTime.value:Row.ArrTime.value]\
             +line[Row.CRSArrTime.value:Row.FlightNum.value]\
             +line[Row.CRSElapsedTime.value:Row.AirTime.value]\
             +line[Row.Origin.value:Row.TaxiIn.value]
+
+            if 'NA' in featLine:
+                invalidCount+=1
+                continue
+            
             #Convert the departure time to hour in day
             if int(featLine[2])%100 >= 30:
                 featLine[2] = int(featLine[2])/100 + .5
@@ -120,8 +130,25 @@ def run(input_args):
             else:
                 featLine[3] = int(featLine[3])/100
             #featLine[3]= int(featLine[3])/100
-            #flight duration we can treat as linear
-            #flight distance we can treat as linear
+            
+            #Cancellations take all the flights that dont have NA for a feature or the cancellation value
+            if line[Row.Cancelled.value] != 'NA':
+                cancelFeatWriter.writerow(featLine)
+                cancelVect.append(line[Row.Cancelled.value])
+            else: #if the cancel value is NA then we don't consider it, ignore it
+                continue
+
+            #For delays we take all the flights that dont have NA values in the features
+            if line[Row.ArrDelay.value] == 'NA' and int(line[Row.Cancelled.value]) != 1:
+                continue 
+            elif line[Row.ArrDelay.value] == 'NA':
+                delayVect.append(250)
+            else:
+                delayVect.append(line[Row.ArrDelay.value])
+            delayFeatWriter.writerow(featLine)
+
+            #update stats
+            counter+=1
             if stats:
                 statDict['cancelled']+=int(line[Row.Cancelled.value])
                 statDict['total']+=1
@@ -135,21 +162,16 @@ def run(input_args):
                 else:
                     statDict['otherCharOrigin']+=1
                 carrierDict[line[Row.UniqueCarrier.value]]+=1
-            #write to feature file and store results in vectors
-            featWriter.writerow(featLine)
-            #add to cancel vector to write at end
-            cancelVect.append(line[Row.Cancelled.value])
-            #add to delay vector to write at end
-            delayVect.append(line[Row.ArrDelay.value])
-            counter+=1
             if counter>=maxRow:
                 break
+            
         #print the 1 D cancel and delay values out
         cancelWriter.writerow(cancelVect)
         delayWriter.writerow(delayVect)
 
     if stats:
         print "total flight count is {}".format(statDict['total'])
+        print "number of invalid flight features is {}".format(invalidCount)
         print "number of elements in the cancel vector is {}".format(len(cancelVect))
         print "number of elements in the delay vector is {}".format(len(delayVect))
         print "number of delayed flights is {}".format(statDict['delayed'])        
@@ -162,7 +184,8 @@ def run(input_args):
         print "number of origin airports with other chars is {}".format(statDict['otherCharOrigin'])
         
                                                          
-    featFile.close()
+    delayFeatFile.close()
+    cancelFeatFile.close()
     cancelFile.close()
     delayFile.close()
     return
