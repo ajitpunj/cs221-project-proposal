@@ -45,11 +45,12 @@ def updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,fa
     globalcorrectNegative+=correctNegative
     globalpredictionLen+=predictionLen
 
-def runKMeans(features,results,n_samples,input_args):
+def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
     #k-means
     #shape of fit_predict input is n_samples,n_features
     #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     print 'k-means'
+    results = pred_lib.reshape_results(results)
     X = np.matrix(zip(results,features))
     y_pred = KMeans(n_samples, 'random').fit(features)
     totalPred = []
@@ -62,7 +63,7 @@ def runKMeans(features,results,n_samples,input_args):
             if n == y_pred.labels_[y]:
                 feat.append(features[y])
                 res.append(results[y])
-        runLinearModel(np.matrix(feat), np.matrix(res),input_args)
+        runLinearModel(np.matrix(feat), np.matrix(res),testFeatures,testResults,input_args)
     print "AGGREGATE STATS FOR K MEANS"
     pred_lib.printAggregateStats(globaldiff,globalpredDelayed,globalrealDelayed,globalpredNotDelayed,globalrealNotDelayed,globalfalsePositives,globalfalseNegatives,globalcorrectPositive,globalcorrectNegative,globalpredictionLen)
 
@@ -248,7 +249,7 @@ def run(input_args):
         runRandomForestModel(features,results,testFeat,testRes,input_args)
     elif input_args.kmeans:
         #TODO get n_samples another way
-        runKMeans(features,results,10,input_args)
+        runKMeans(features,results,testFeat,testRes,5,input_args)
     else:
         runLinearModel(features,results,testFeat,testRes,input_args)
 
