@@ -38,7 +38,7 @@ class Row(enum.Enum):
 
 #so we are taking
 #day of month
-#day of year
+#day of week
 #scheduled departure time
 #scheduled arrival time
 #airline

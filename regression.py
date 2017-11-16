@@ -191,10 +191,17 @@ def run(input_args):
     
     #read all the features into a dataframe
     featureDF=pred_lib.CreateDF(input_args.feature_file)    
-    
+
+    if input_args.omit_features:
+        #remove extraneous features
+#        featureDF = featureDF.drop(0,1)
+        featureDF = featureDF.drop(5,1)
+        featureDF = featureDF.drop(8,1)
+        nonLinearColumns=[0,1,4,6,7]
+        
     #if the flag is set for linearize, the do that
     if input_args.linearize:
-        featureDF = pred_lib.LinearizeFeatures(featureDF)        
+        featureDF = pred_lib.LinearizeFeatures(featureDF)
     else:#otherwise we split nonlinear columns out into one hot 
         featureDF = pred_lib.IndicatorFeatures(featureDF,nonLinearColumns)
 
@@ -217,8 +224,9 @@ def run(input_args):
     featureDF = featureDF.sample(frac=1,random_state=500).reset_index(drop=True)
 
     #TODO can edit this when doing validation to split differently
+    start = int(len(featureDF)*0) #HACK Can set this to reduce training
     cutoff = int(len(featureDF) *.9)
-    trainingDF = featureDF[:cutoff]
+    trainingDF = featureDF[start:cutoff]
     testDF = featureDF[cutoff:]
 
     resultsCol = len(trainingDF.columns)-1
@@ -259,7 +267,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("feature_file", help= "the local path to the feature file. A 2D array of feature vectors")
 parser.add_argument("result_file", help= "the local path to the file containing the 1D vector of results pertaining to the features")
 parser.add_argument("-l","--linearize", help= "flag to linearize object column data instead of splitting columns out into indicator feature vectors",action="store_true")
-#parser.add_argument("-o","--output_file", help= "If you want to print results to an output file, give a path")
+parser.add_argument("-o","--omit_features", help= "remove the black listed (hard coded) features from the DF",action="store_true")
 parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="store_true")
 parser.add_argument("-k","--kmeans", help= "use kmeans then linear regression on clusters",action="store_true")
 parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")
