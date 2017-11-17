@@ -84,7 +84,7 @@ def getTrainedSGDClassifierModel(features,results,gs=0):
         'penalty':['none','l2','l1'],
         'learning_rate':['constant','optimal','invscaling']
     }
-    regr = linear_model.SGDClassifier(loss="hinge",penalty=None)
+    regr = linear_model.SGDClassifier(loss="hinge",penalty=None,eta0=.00001)
     if gs:
         CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
         CVregr.fit(features,results)

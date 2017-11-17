@@ -74,11 +74,8 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
 def runLinearModel(features,results,testFeatures,testResults,input_args):
     regr = pred_lib.getTrainedLinearModel(features,results)
 
-    if input_args.test:
-        predictions = regr.predict(testFeatures)
-        results = testResults
-    else:
-        predictions = regr.predict(features)
+    predictions = regr.predict(testFeatures)
+    results = testResults
     
     #average difference
     Xval=[]
@@ -104,12 +101,8 @@ def runSGDModel(features,results,testFeatures,testResults,input_args):
     else:
         regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel(),input_args.grid_search)
 
-    if input_args.test:
-        predictions = regr.predict(testFeatures)
-        results = testResults
-    else:
-        predictions = regr.predict(features)
-    
+    predictions = regr.predict(testFeatures)
+    results = testResults
     
     #average difference
     Xval=[]
@@ -134,11 +127,8 @@ def runRandomForestModel(features,results,testFeatures,testResults,input_args):
     else:
         regr = pred_lib.getTrainedRandomForestModel(features,results,input_args.grid_search)
     
-    if input_args.test:
-        predictions = regr.predict(testFeatures)
-        results = testResults        
-    else:
-        predictions = regr.predict(features)
+    predictions = regr.predict(testFeatures)
+    results = testResults        
 
     #average difference
     Xval=[]
@@ -224,32 +214,47 @@ def run(input_args):
     featureDF = featureDF.sample(frac=1,random_state=500).reset_index(drop=True)
 
     #TODO can edit this when doing validation to split differently
-    start = int(len(featureDF)*0) #HACK Can set this to reduce training
-    cutoff = int(len(featureDF) *.9)
-    trainingDF = featureDF[start:cutoff]
-    testDF = featureDF[cutoff:]
+    if input_args.validation: #for validation, train on first 70% and test on next 20%. save 10% for test
+        trainingStart =0
+        trainingEnd=int(len(featureDF) *.7)
+        testStart = trainingEnd
+        testEnd=int(len(featureDF) *.9)
+    elif input_args.test: #train on first 90% and then test on last 10%
+        trainingStart = 0
+        trainingEnd= int(len(featureDF) *.9)
+        testStart = trainingEnd
+        testEnd=int(len(featureDF))
+    else: #else we are just doing training on training, and they are the same
+        trainingStart = 0
+        trainingEnd= int(len(featureDF) *.7)
+        testStart=trainingStart
+        testEnd=trainingEnd
+
+    #portion out the training and test parts vectors based on the slices set above
+    print trainingStart
+    print trainingEnd
+    print testStart
+    print testEnd
+    trainingDF = featureDF[trainingStart:trainingEnd]
+    testDF = featureDF[testStart:testEnd]
 
     resultsCol = len(trainingDF.columns)-1
     results = trainingDF[resultsCol]
     features = trainingDF.drop(trainingDF.columns[resultsCol],axis=1)
 
+
+    resultsCol = len(testDF.columns)-1
+    testRes = testDF[resultsCol]
+    testFeat =  testDF.drop(testDF.columns[resultsCol],axis=1)
+
     results = results.as_matrix()
     features = features.as_matrix()
-
-    if input_args.test:
-        resultsCol = len(testDF.columns)-1
-        testRes = testDF[resultsCol]
-        testFeat =  testDF.drop(testDF.columns[resultsCol],axis=1)
-        testRes = testRes.as_matrix()
-        testFeat = testFeat.as_matrix()
-    else:
-        testRes=None
-        testFeat=None
-
+    testRes = testRes.as_matrix()
+    testFeat = testFeat.as_matrix()
+    
     #Everything needs the results reshaped so far
     results = pred_lib.reshape_results(results).ravel()
-    if input_args.test:
-        testRes = pred_lib.reshape_results(testRes).ravel()
+    testRes = pred_lib.reshape_results(testRes).ravel()
 
     if input_args.sgd:
         runSGDModel(features,results,testFeat,testRes,input_args)
@@ -274,7 +279,8 @@ parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss in
 parser.add_argument("-rf","--randomforest", help= "use random forest regression",action="store_true")
 parser.add_argument("-c","--classifier", help= "use a classifier instead of a regressor. Either sgd or random forest must also be specified and should be used for cancellations not delays",action="store_true")
 parser.add_argument("-pt","--plot_title", help= "title for generated plot")
-parser.add_argument("-t","--test", help= "predict test data against trained data",action="store_true")
+parser.add_argument("-t","--test", help= "predict test data against trained data (including validation",action="store_true")
+parser.add_argument("-v","--validation", help= "predict validation data against trained data",action="store_true")
 parser.add_argument("-gt","--grid_search",help="use grid search to optimize parameters for the given model and feature set")                    
 args = parser.parse_args()
 run(args)
