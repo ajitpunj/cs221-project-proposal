@@ -5,7 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from sklearn.svm import SVR
-from sklearn import datasets,linear_model,preprocessing
+from sklearn import datasets,linear_model,preprocessing,naive_bayes
 from sklearn.model_selection import cross_val_predict, GridSearchCV
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.cluster import KMeans
@@ -51,6 +51,17 @@ def MatchTrainingToTest(trainingFeat,testingFeat):
 #For some reason we need to reshape our 1D results vector for scikit
 def reshape_results(results):
     return results.reshape(-1,1)
+
+def getTrainedNaiveBayes(features,results,gs=0):
+    regr=naive_bayes.GaussianNB()
+    regr.fit(features,results)
+    return regr
+def getTrainedBayesianRidge(features,results,gs=0):
+#    regr = linear_model.BayesianRidge(lambda_1=1,n_iter=100000)
+    regr = linear_model.BayesianRidge()
+    regr.fit(features,results)
+    return regr
+
 #trains a linear regression model based on the inputs
 #returns the model to be used for predictions
 #NOTE this needs reshaped results vector

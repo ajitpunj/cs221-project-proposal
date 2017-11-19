@@ -71,8 +71,26 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
     # labels = y_pred.labels_
     # newFeatures = np.matrix(zip(features,labels))
 
-def runLinearModel(features,results,testFeatures,testResults,input_args):
-    regr = pred_lib.getTrainedLinearModel(features,results)
+def TrainPredict(features,results,testFeatures,testResults,input_args):
+    if input_args.sgd:
+        if input_args.classifier:
+            regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
+        else:
+            regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel(),input_args.grid_search)
+    elif input_args.randomforest:
+        if input_args.classifier:
+            regr = pred_lib.getTrainedRandomForestClassifier(features,results,input_args.grid_search)
+        else:
+            regr = pred_lib.getTrainedRandomForestModel(features,results,input_args.grid_search)
+    elif input_args.bayes:
+        if input_args.classifier:
+            regr = pred_lib.getTrainedNaiveBayes(features,results,input_args.grid_search)
+        else:
+            regr = pred_lib.getTrainedBayesianRidge(features,results,input_args.grid_search)
+    else: #linear regression
+        if input_args.classifier:
+            print "YOU PROBABLY DIDN'T MEAN TO CLASSIFY USING THE NORMAL REGRESSION"
+        regr = pred_lib.getTrainedLinearModel(features,results)
 
     predictions = regr.predict(testFeatures)
     results = testResults
@@ -92,89 +110,6 @@ def runLinearModel(features,results,testFeatures,testResults,input_args):
 
     if input_args.plot:
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
-
-def runSGDModel(features,results,testFeatures,testResults,input_args):
-    #need to scale the input features for SGD, algorithm sensitive
-    
-    if input_args.classifier:
-        regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
-    else:
-        regr = pred_lib.getTrainedSGDRegressorModel(features,results.ravel(),input_args.grid_search)
-
-    predictions = regr.predict(testFeatures)
-    results = testResults
-    
-    #average difference
-    Xval=[]
-    Yval=[]
-    #There has got to be a better way to convert the predictions vector that gets returned to be clean for plotting....
-    for x in range (0,len(predictions)):
-        if input_args.plot:
-            Xval.append(predictions[x])
-            Yval.append(results[x])
-
-
-    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
-    updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
-
-    if input_args.plot:
-        pred_lib.plotResults(Xval,Yval,input_args.plot_title)
-
-def runRandomForestModel(features,results,testFeatures,testResults,input_args):
-
-    if input_args.classifier:
-        regr = pred_lib.getTrainedRandomForestClassifier(features,results,input_args.grid_search)        
-    else:
-        regr = pred_lib.getTrainedRandomForestModel(features,results,input_args.grid_search)
-    
-    predictions = regr.predict(testFeatures)
-    results = testResults        
-
-    #average difference
-    Xval=[]
-    Yval=[]
-    #There has got to be a better way to convert the predictions vector that gets returned to be clean for plotting....
-    for x in range (0,len(predictions)):
-        if input_args.plot:
-            Xval.append(predictions[x])
-            Yval.append(results[x])
-
-
-    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
-    updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
-
-    if input_args.plot:
-        pred_lib.plotResults(Xval,Yval,input_args.plot_title)
-
-    
-def runRBFModel(features,results,input_args):
-    regr_ply = SVR(kernel='poly',C=1e3,degree=2)
-#    regr_rbf = SVR(kernel='rbf',C=1e3,gamma=0.1)
-    y_ply=regr_ply.fit(features,results.ravel())
-#    y_rbf=regr_rbf.fit(features,results.ravel())
-    predictions = regr_ply.predict(features)    
-    #Print the R2 Score
-    print "The R2 Score from the regression is {}".format(r2_score(results,predictions))
-    index=[]
-    yVal_ply=[]
-    xVal_ply=[]
-    correctNegatives=0
-    falseNegatives=0
-    for x in range(0,len(results)):
-        xVal_ply.append(predictions[x])
-        yVal_ply.append(results[x])
-        if predictions[x]<=0 and results[x] <=0:
-            correctNegatives+=1
-        if predictions[x]<=0 and results[x] >0:
-            falseNegatives+=1
-
-    print "correct neg {}".format(correctNegatives)
-    print "false neg {}".format(falseNegatives)
-            
-        
-    if input_args.plot:
-        pred_lib.plotResults(xVal_ply,yVal_ply,input_args.plot_title)
-    
 def run(input_args):
     #nonlinear are dayofmonth,dayofweek,airline,origin,dest
     nonLinearColumns=[0,1,4,6,7]
@@ -231,10 +166,9 @@ def run(input_args):
         testEnd=trainingEnd
 
     #portion out the training and test parts vectors based on the slices set above
-    print trainingStart
-    print trainingEnd
-    print testStart
-    print testEnd
+    print "Training Range {}:{}".format(trainingStart,trainingEnd)
+    print "Predicting Range {}:{}".format(testStart,testEnd)
+
     trainingDF = featureDF[trainingStart:trainingEnd]
     testDF = featureDF[testStart:testEnd]
 
@@ -256,15 +190,10 @@ def run(input_args):
     results = pred_lib.reshape_results(results).ravel()
     testRes = pred_lib.reshape_results(testRes).ravel()
 
-    if input_args.sgd:
-        runSGDModel(features,results,testFeat,testRes,input_args)
-    elif input_args.randomforest:
-        runRandomForestModel(features,results,testFeat,testRes,input_args)
-    elif input_args.kmeans:
-        #TODO get n_samples another way
+    if input_args.kmeans:
         runKMeans(features,results,testFeat,testRes,5,input_args)
     else:
-        runLinearModel(features,results,testFeat,testRes,input_args)
+        TrainPredict(features,results,testFeat,testRes,input_args)
 
     return
 
@@ -276,6 +205,7 @@ parser.add_argument("-o","--omit_features", help= "remove the black listed (hard
 parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="store_true")
 parser.add_argument("-k","--kmeans", help= "use kmeans then linear regression on clusters",action="store_true")
 parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")
+parser.add_argument("-b","--bayes", help= "Use bayesian ridge predictor or naive guassian bayesian classifier",action="store_true")
 parser.add_argument("-rf","--randomforest", help= "use random forest regression",action="store_true")
 parser.add_argument("-c","--classifier", help= "use a classifier instead of a regressor. Either sgd or random forest must also be specified and should be used for cancellations not delays",action="store_true")
 parser.add_argument("-pt","--plot_title", help= "title for generated plot")
