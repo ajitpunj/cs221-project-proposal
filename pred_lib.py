@@ -139,7 +139,18 @@ def getTrainedRandomForestClassifier(features,results,gs=0):
 #def trainRandomForestModel(features,results):
 
 def plotResults(predictions,actual,title=None):
+    #we want the axis to be the same as we are looking for linear so
+    predMax = max(predictions)
+    predMin = min(predictions)
+    actMax = max(actual)
+    actMin = min(actual)
+
+    axisMax = max([predMax,actMax])
+    axisMin = max([predMin,actMin])
     fig,ax =plt.subplots()
+    ax.set_xlim([axisMin,axisMax])
+    ax.set_ylim([axisMin,axisMax])
+    
     if title != None:
         plt.title(title)
     else:
@@ -154,6 +165,7 @@ def plotResults(predictions,actual,title=None):
 
 def printStats(predictions,actual):
     diff = 0
+    mse = 0
     predDelayed=0
     realDelayed=0
     predNotDelayed=0
@@ -165,6 +177,7 @@ def printStats(predictions,actual):
 
     for x in range (0,len(predictions)):
         diff += abs(predictions[x]-actual[x])
+        mse += (predictions[x]-actual[x]) *(predictions[x]-actual[x])
         if predictions[x]<=0:
             predNotDelayed+=1
         else:
@@ -185,8 +198,10 @@ def printStats(predictions,actual):
             correctPositive+=1
 
     print "The R2 Score from the regression is {}".format(r2_score(actual,predictions))
-        
-    print "The average difference between real and predicted is {}".format(diff/len(predictions))
+
+    print "The MSE between real and predicted is {}".format(mse/len(predictions))
+    print "The average difference in minutes between real and predicted is {}".format(diff/len(predictions))
+    
     if realDelayed>0:
         print "correct positive predictions {} correctPos/real {}".format(correctPositive,correctPositive /(1.0*realDelayed))
     if realNotDelayed>0:
