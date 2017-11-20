@@ -112,17 +112,22 @@ def TrainPredict(features,results,testFeatures,testResults,input_args):
         pred_lib.plotResults(Xval,Yval,input_args.plot_title)
 def run(input_args):
     #nonlinear are dayofmonth,dayofweek,airline,origin,dest
-    nonLinearColumns=[0,1,4,6,7]
+    nonLinearColumns=[0,1,2,3,4,6,7]
     
     #read all the features into a dataframe
-    featureDF=pred_lib.CreateDF(input_args.feature_file)    
+    featureDF=pred_lib.CreateDF(input_args.feature_file)
 
+    #add a column that is just a constant 1 feature, as linear requires x1,x2,1
+#    featureDF['const']=1
+    
     if input_args.omit_features:
-        #remove extraneous features
-#        featureDF = featureDF.drop(0,1)
-        featureDF = featureDF.drop(5,1)
-        featureDF = featureDF.drop(8,1)
-        nonLinearColumns=[0,1,4,6,7]
+        #remove extraneous features #NOTE this seems to help random forest delay predictions
+        featureDF = featureDF.drop(3,1) #drop arrival time
+        featureDF = featureDF.drop(8,1) #drop distance
+        featureDF = featureDF.drop(0,1) #drop day of month
+        featureDF = featureDF.drop(1,1) #drop day of week
+        
+        nonLinearColumns=[2,4,6,7]
         
     #if the flag is set for linearize, the do that
     if input_args.linearize:
