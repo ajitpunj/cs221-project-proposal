@@ -168,6 +168,7 @@ def printStats(predictions,actual):
     mse = 0
     predDelayed=0
     realDelayed=0
+    oracleMSE=0
     predNotDelayed=0
     realNotDelayed=0
     falsePositives=0
@@ -178,6 +179,7 @@ def printStats(predictions,actual):
     for x in range (0,len(predictions)):
         diff += abs(predictions[x]-actual[x])
         mse += (predictions[x]-actual[x]) *(predictions[x]-actual[x])
+        oracleMSE+=(27-actual[x])*(27-actual[x])
         if predictions[x]<=0:
             predNotDelayed+=1
         else:
@@ -197,6 +199,7 @@ def printStats(predictions,actual):
         if predictions[x]>0 and actual[x]>0:
             correctPositive+=1
 
+    print "The oracle (if this is delays) has MSE of {}".format(oracleMSE)
     print "The R2 Score from the regression is {}".format(r2_score(actual,predictions))
 
     print "The MSE between real and predicted is {}".format(mse/len(predictions))
