@@ -111,7 +111,7 @@ def getTrainedRandomForestModel(features,results,gs=0):
         'max_features':['auto','sqrt','log2'],
         'criterion' : ['mse','mae']
     }    
-    regr = RandomForestRegressor(n_jobs=-1,random_state=0)
+    regr = RandomForestRegressor(n_jobs=-1,random_state=0,max_depth=25,max_features='log2')
     if gs:
         CVregr = GridSearchCV(estimator = regr,param_grid=param_grid)
         CVregr.fit(features,results)
@@ -121,7 +121,7 @@ def getTrainedRandomForestModel(features,results,gs=0):
     return regr
 
 def getTrainedRandomForestClassifier(features,results,gs=0):
-    regr = RandomForestClassifier(n_jobs=2,random_state=0)
+    regr = RandomForestClassifier(n_jobs=2,random_state=0,max_depth=25,max_features='log2')
     param_grid ={
         'n_estimators': [200,500,700,1000],
         'max_features':['auto','sqrt','log2'],
