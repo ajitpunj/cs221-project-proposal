@@ -194,8 +194,9 @@ def run(input_args):
     #Everything needs the results reshaped so far
     results = pred_lib.reshape_results(results).ravel()
     testRes = pred_lib.reshape_results(testRes).ravel()
-
-    if input_args.kmeans:
+    if input_args.baseline_oracle:
+        pred_lib.BaselineOracle(testRes,input_args.classifier)
+    elif input_args.kmeans:
         runKMeans(features,results,testFeat,testRes,5,input_args)
     else:
         TrainPredict(features,results,testFeat,testRes,input_args)
@@ -207,6 +208,7 @@ parser.add_argument("feature_file", help= "the local path to the feature file. A
 parser.add_argument("result_file", help= "the local path to the file containing the 1D vector of results pertaining to the features")
 parser.add_argument("-l","--linearize", help= "flag to linearize object column data instead of splitting columns out into indicator feature vectors",action="store_true")
 parser.add_argument("-o","--omit_features", help= "remove the black listed (hard coded) features from the DF",action="store_true")
+parser.add_argument("-bo","--baseline_oracle", help= "stats for the baseline and oracle on given data range",action="store_true")
 parser.add_argument("-p","--plot", help= "plot predicted vs actual",action="store_true")
 parser.add_argument("-k","--kmeans", help= "use kmeans then linear regression on clusters",action="store_true")
 parser.add_argument("-s","--sgd", help= "use SGD regression with squared loss instead of generic linear",action="store_true")

@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 import numpy as np
 import os
+import random
 import matplotlib.pyplot as plt
 from sklearn.svm import SVR
 from sklearn import datasets,linear_model,preprocessing,naive_bayes
@@ -162,7 +163,130 @@ def plotResults(predictions,actual,title=None):
     fig.show()    
     plt.show()
 
+def BaselineOracle(actual,classify):
+    total=0
+    pos=0
+    neg=0
+    #get some stats we need for the baseline and oracle algorithms
+    for i in range(0,len(actual)):
+        total+=actual[i]
+        if(actual[i]>0):
+            pos+=1
+        else:
+            neg+=1
 
+    average = total / (1.0*len(actual))
+    cutoff = int(len(actual)*.15)
+    poscutoff = int(pos*.15)
+    
+    #create a prediction vector for the baseline and oracle
+    base_mse=0
+    base_20=0
+    base_within20=0
+    base_predpos=0
+    base_predneg=0
+    base_correctpos=0
+    base_correctneg=0
+    
+    oracle_mse=0
+    oracle_20=0
+    oracle_within20=0
+    oracle_predpos=0
+    oracle_predneg=0
+    oracle_correctpos=0
+    oracle_correctneg=0
+    for x in range(0,len(actual)):        
+        if classify: #For cancellations classification
+            #-----------------baseline---------------------#    
+            #For the baseline we simply predict randomly based on the % that are actually cancelled
+            if random.randint(1,len(actual))<=pos:
+                base_predpos+=1
+                if actual[x]>0:
+                    base_correctpos+=1
+            else:
+                base_predneg+=1
+                if actual[x]<=0:
+                    base_correctneg+=1            
+            #-----------------oracle-----------------------#
+            #For cancel classification, we assume that 15% of cancellations are predicted correctly due to weather
+            #and the rest we guess based on the average from the dataset
+            if actual[x]>0 and oracle_predpos<poscutoff:
+                oracle_predpos+=1
+                oracle_correctpos+=1
+            else:#if it isnt a known, then we guess only on positives based on the data
+                if actual[x]>0:
+                    if random.randint(1,len(actual))<=pos:
+                        oracle_predpos+=1
+                        oracle_correctpos+=1
+                    else:
+                        oracle_predneg+=1
+                else: #we get all the negatives correct with the oracle
+                    oracle_predneg+=1
+                    oracle_correctneg+=1            
+        else: #For prediction regression
+            #-----------------baseline---------------------#    
+            #Our baseline is very simple, it just guesses the average delay from 2008 every time
+            base_mse += (27-actual[x])*(27-actual[x])
+            if abs(27-actual[x])<=20:
+                base_20+=1
+                
+            if 27>0:
+                base_predpos+=1
+                if actual[x]>0:
+                    base_correctpos+=1
+            else:
+                base_predneg+=1
+                if actual[x]<=0:
+                    base_correctneg+=1
+    
+            #-----------------oracle-----------------------#
+            #For delay predictions we assume that 15% are known and predicted correctly due to weather
+            #and the rest we guess based on the average from the dataset
+            if x <= cutoff:#its shuffled so just use the first 15%
+                if actual[x]>0:
+                    oracle_predpos+=1
+                    oracle_correctpos+=1
+                else:
+                    oracle_predneg+=1
+                    oracle_correctneg+=1
+                oracle_20+=1
+            else: #otherwise we guess within range of 45 from the actual
+                guess = random.randint(int(-45),int(45)) + actual[x]\
+                
+                if guess>0:
+                    oracle_predpos+=1
+                    if actual[x]>0:
+                        oracle_correctpos+=1
+                else:
+                    oracle_predneg+=1
+                    if actual[x]<=0:
+                        oracle_correctneg+=1
+                        
+                if abs(actual[x]-guess)<20:
+                    oracle_20+=1
+                oracle_mse+=(guess-actual[x])*(guess-actual[x])
+    print "----------------------------------------------------------------"
+    if classify==0:
+        print "The average was {}".format(average)
+        print "The baseline has MSE of {}".format(base_mse/(1.0*len(actual)))
+        print "The baseline has % within 20 of {}".format(base_20/(1.0*len(actual)))
+        print "The oracle has MSE of {}".format(oracle_mse/(1.0*len(actual)))
+        print "The oracle has % within 20 of {}".format(oracle_20/(1.0*len(actual)))
+
+    print "The + precision of baseline is {}".format(base_correctpos/(1.0*base_predpos))
+    print "The + recall of the baseline is {}".format(base_correctpos/(1.0*pos))
+    if base_predneg==0:
+        print "The - precision of baseline is {}".format(0)
+    else:
+        print "The - precision of baseline is {}".format(base_correctneg/(1.0*base_predneg))
+
+    print "The - recall of the baseline is {}".format(base_correctneg/(1.0*neg))
+
+    print "The + precision of oracle is {}".format(oracle_correctpos/(1.0*oracle_predpos))
+    print "The + recall of the oracle is {}".format(oracle_correctpos/(1.0*pos))
+    print "The - precision of oracle is {}".format(oracle_correctneg/(1.0*oracle_predneg))
+    print "The - recall of the oracle is {}".format(oracle_correctneg/(1.0*neg))
+    print "----------------------------------------------------------------"
 def printStats(predictions,actual):
     diff = 0
     mse = 0
@@ -175,7 +299,9 @@ def printStats(predictions,actual):
     falseNegatives=0
     correctPositive=0
     correctNegative=0
-
+    within20=0
+    base20=0
+    
     for x in range (0,len(predictions)):
         diff += abs(predictions[x]-actual[x])
         mse += (predictions[x]-actual[x]) *(predictions[x]-actual[x])
@@ -199,22 +325,22 @@ def printStats(predictions,actual):
         if predictions[x]>0 and actual[x]>0:
             correctPositive+=1
 
-    print "The oracle (if this is delays) has MSE of {}".format(oracleMSE)
+        if abs(predictions[x]-actual[x])<=20:
+            within20+=1
+        
     print "The R2 Score from the regression is {}".format(r2_score(actual,predictions))
-
     print "The MSE between real and predicted is {}".format(mse/len(predictions))
     print "The average difference in minutes between real and predicted is {}".format(diff/len(predictions))
-    
+
     if realDelayed>0:
-        print "correct positive predictions {} correctPos/real {}".format(correctPositive,correctPositive /(1.0*realDelayed))
+        print "The + precision is {}".format(correctPositive/(1.0*predDelayed))
+        print "the + recall is {}".format(correctPositive/(1.0*realDelayed))
     if realNotDelayed>0:
-        print "correct negative predictions {} correctNeg/real {}".format(correctNegative,correctNegative/(1.0*realNotDelayed))
+        print "the - precision is {}".format(correctNegative/(1.0*predNotDelayed))
+        print "the - recall is {}".format(correctNegative/(1.0*realNotDelayed))
+    print "the % of guesses within 20 minutes is {}".format(within20/(1.0*len(predictions)))
 
-    if predDelayed >0:
-        print "false positives (predicted to happen but didnt) {} percent of predicted that were wrong {}".format(falsePositives,falsePositives/(1.0*predDelayed))
-
-    if predNotDelayed>0:
-        print "false negatives actually happend but predicted to be ok) {} percent of not predicted that were wrong {}".format(falseNegatives,falseNegatives/(1.0*predNotDelayed))
+    print "The number of real delayed is {} and guessed is {} and correct guess is {}".format(realDelayed,predDelayed,correctPositive)
 
     return diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative, len(predictions)
         
