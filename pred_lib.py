@@ -225,12 +225,13 @@ def BaselineOracle(actual,classify):
                     oracle_correctneg+=1            
         else: #For prediction regression
             #-----------------baseline---------------------#    
-            #Our baseline is very simple, it just guesses the average delay from 2008 every time
-            base_mse += (27-actual[x])*(27-actual[x])
-            if abs(27-actual[x])<=20:
+            #Our baseline is very simple, it just guesses 30 min early to 1 hour late
+            guess = random.randint(-30,60)
+            base_mse += (guess-actual[x])*(guess-actual[x])
+            if abs(guess-actual[x])<=20:
                 base_20+=1
                 
-            if 27>0:
+            if guess>0:
                 base_predpos+=1
                 if actual[x]>0:
                     base_correctpos+=1
