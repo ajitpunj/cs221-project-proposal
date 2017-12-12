@@ -46,12 +46,7 @@ def updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,fa
     globalpredictionLen+=predictionLen
 
 def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
-    #k-means
-    #shape of fit_predict input is n_samples,n_features
-    #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     print 'k-means'
-    results = pred_lib.reshape_results(results)
-    X = np.matrix(zip(results,features))
     y_pred = KMeans(n_samples, 'random').fit(features)
     totalPred = []
     totalRes = []
@@ -63,13 +58,13 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
             if n == y_pred.labels_[y]:
                 feat.append(features[y])
                 res.append(results[y])
-        runLinearModel(np.matrix(feat), np.matrix(res),testFeatures,testResults,input_args)
+        res_use = np.matrix(res)
+        new_res_use=pred_lib.reshape_results(res_use)
+        feat_use = np.matrix(feat)
+        new_feat_use = pred_lib.reshape_results(feat_use).ravel()
+        TrainPredict(feat_use,new_res_use,testFeatures,testResults,input_args)
     print "AGGREGATE STATS FOR K MEANS"
     pred_lib.printAggregateStats(globaldiff,globalpredDelayed,globalrealDelayed,globalpredNotDelayed,globalrealNotDelayed,globalfalsePositives,globalfalseNegatives,globalcorrectPositive,globalcorrectNegative,globalpredictionLen)
-
-    #add cluster number to features vector:
-    # labels = y_pred.labels_
-    # newFeatures = np.matrix(zip(features,labels))
 
 def TrainPredict(features,results,testFeatures,testResults,input_args):
     if input_args.sgd:
@@ -90,7 +85,9 @@ def TrainPredict(features,results,testFeatures,testResults,input_args):
     else: #linear regression
         if input_args.classifier:
             print "YOU PROBABLY DIDN'T MEAN TO CLASSIFY USING THE NORMAL REGRESSION"
+        print "linear model regr"
         regr = pred_lib.getTrainedLinearModel(features,results)
+        print "linear model regr done"
 
     predictions = regr.predict(testFeatures)
     results = testResults
@@ -191,13 +188,15 @@ def run(input_args):
     testRes = testRes.as_matrix()
     testFeat = testFeat.as_matrix()
     
+    if input_args.kmeans:
+        runKMeans(features,results,testFeat,testRes,5,input_args)
+        return
+
     #Everything needs the results reshaped so far
     results = pred_lib.reshape_results(results).ravel()
     testRes = pred_lib.reshape_results(testRes).ravel()
     if input_args.baseline_oracle:
         pred_lib.BaselineOracle(testRes,input_args.classifier)
-    elif input_args.kmeans:
-        runKMeans(features,results,testFeat,testRes,5,input_args)
     else:
         TrainPredict(features,results,testFeat,testRes,input_args)
 
