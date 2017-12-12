@@ -336,7 +336,7 @@ def printStats(predictions,actual):
     if realDelayed>0:
         print "The + precision is {}".format(correctPositive/(1.0*predDelayed))
         print "the + recall is {}".format(correctPositive/(1.0*realDelayed))
-    if realNotDelayed>0:
+    if realNotDelayed>0 and predNotDelayed != 0:
         print "the - precision is {}".format(correctNegative/(1.0*predNotDelayed))
         print "the - recall is {}".format(correctNegative/(1.0*realNotDelayed))
     print "the % of guesses within 20 minutes is {}".format(within20/(1.0*len(predictions)))
