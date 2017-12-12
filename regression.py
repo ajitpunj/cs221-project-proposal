@@ -85,9 +85,7 @@ def TrainPredict(features,results,testFeatures,testResults,input_args):
     else: #linear regression
         if input_args.classifier:
             print "YOU PROBABLY DIDN'T MEAN TO CLASSIFY USING THE NORMAL REGRESSION"
-        print "linear model regr"
         regr = pred_lib.getTrainedLinearModel(features,results)
-        print "linear model regr done"
 
     predictions = regr.predict(testFeatures)
     results = testResults
