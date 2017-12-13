@@ -288,7 +288,7 @@ def BaselineOracle(actual,classify):
     print "The - precision of oracle is {}".format(oracle_correctneg/(1.0*oracle_predneg))
     print "The - recall of the oracle is {}".format(oracle_correctneg/(1.0*neg))
     print "----------------------------------------------------------------"
-def printStats(predictions,actual):
+def printStats(predictions,actual,print_lines):
     diff = 0
     mse = 0
     predDelayed=0
@@ -328,20 +328,20 @@ def printStats(predictions,actual):
 
         if abs(predictions[x]-actual[x])<=20:
             within20+=1
-        
-    print "The R2 Score from the regression is {}".format(r2_score(actual,predictions))
-    print "The MSE between real and predicted is {}".format(mse/len(predictions))
-    print "The average difference in minutes between real and predicted is {}".format(diff/len(predictions))
+    if print_lines == 1:    
+        print "The R2 Score from the regression is {}".format(r2_score(actual,predictions))
+        print "The MSE between real and predicted is {}".format(mse/len(predictions))
+        print "The average difference in minutes between real and predicted is {}".format(diff/len(predictions))
 
-    if realDelayed>0:
-        print "The + precision is {}".format(correctPositive/(1.0*predDelayed))
-        print "the + recall is {}".format(correctPositive/(1.0*realDelayed))
-    if realNotDelayed>0 and predNotDelayed != 0:
-        print "the - precision is {}".format(correctNegative/(1.0*predNotDelayed))
-        print "the - recall is {}".format(correctNegative/(1.0*realNotDelayed))
-    print "the % of guesses within 20 minutes is {}".format(within20/(1.0*len(predictions)))
+        if realDelayed>0:
+            print "The + precision is {}".format(correctPositive/(1.0*predDelayed))
+            print "the + recall is {}".format(correctPositive/(1.0*realDelayed))
+        if realNotDelayed>0:
+            print "the - precision is {}".format(correctNegative/(1.0*predNotDelayed))
+            print "the - recall is {}".format(correctNegative/(1.0*realNotDelayed))
+        print "the % of guesses within 20 minutes is {}".format(within20/(1.0*len(predictions)))
 
-    print "The number of real delayed is {} and guessed is {} and correct guess is {}".format(realDelayed,predDelayed,correctPositive)
+        print "The number of real delayed is {} and guessed is {} and correct guess is {}".format(realDelayed,predDelayed,correctPositive)
 
     return diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative, len(predictions)
         
