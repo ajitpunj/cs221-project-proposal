@@ -65,7 +65,7 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
         new_res_use=pred_lib.reshape_results(res_use)
         feat_use = np.matrix(feat)
         new_feat_use = pred_lib.reshape_results(feat_use).ravel()
-        TrainPredict(feat_use,new_res_use,testFeatures,testResults,input_args)
+        TrainPredict(feat_use,new_res_use,testFeatures,testResults,input_args,0)
     print "AGGREGATE STATS FOR K MEANS"
     pred_lib.printAggregateStats(globaldiff,globalpredDelayed,globalrealDelayed,globalpredNotDelayed,globalrealNotDelayed,globalfalsePositives,globalfalseNegatives,globalcorrectPositive,globalcorrectNegative,globalpredictionLen)
 
@@ -73,7 +73,7 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
     # labels = y_pred.labels_
     # newFeatures = np.matrix(zip(features,labels))
 
-def TrainPredict(features,results,testFeatures,testResults,input_args):
+def TrainPredict(features,results,testFeatures,testResults,input_args, print_stats):
     if input_args.sgd:
         if input_args.classifier:
             regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
@@ -106,10 +106,7 @@ def TrainPredict(features,results,testFeatures,testResults,input_args):
             Xval.append(predictions[x])
             Yval.append(results[x])
 
-    if input_args.kmeans:
-        diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results,0)
-    else:
-        diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results,1)
+    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results,print_stats)
     updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
 
     if input_args.plot:
@@ -204,7 +201,7 @@ def run(input_args):
     if input_args.baseline_oracle:
         pred_lib.BaselineOracle(testRes,input_args.classifier)
     else:
-        TrainPredict(features,results,testFeat,testRes,input_args)
+        TrainPredict(features,results,testFeat,testRes,input_args,1)
 
     return
 
