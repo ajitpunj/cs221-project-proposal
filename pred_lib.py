@@ -88,6 +88,17 @@ def getTrainedSGDRegressorModel(features,results,gs=0):
         print CVregr.best_params_
     #need to scale the features    
     regr.fit(features,results)
+    weights = regr.coef_
+#    print weights
+#    index=[]
+#    for x in range(0,len(weights)):
+#        index.append(x)
+#    fig,ax =plt.subplots()
+#    ax.plot(index,weights,'bo')
+#    ax.set_xlabel("weight index")
+#    ax.set_ylabel("weight value")
+#    fig.show()    
+#    plt.show()
     return regr
 
 def getTrainedSGDClassifierModel(features,results,gs=0):
@@ -147,7 +158,7 @@ def plotResults(predictions,actual,title=None):
     actMin = min(actual)
 
     axisMax = max([predMax,actMax])
-    axisMin = max([predMin,actMin])
+    axisMin = min([predMin,actMin])
     fig,ax =plt.subplots()
     ax.set_xlim([axisMin,axisMax])
     ax.set_ylim([axisMin,axisMax])
