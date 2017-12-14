@@ -50,26 +50,22 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
     #shape of fit_predict input is n_samples,n_features
     #http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     print 'k-means'
-    # results = pred_lib.reshape_results(results)
-    # X = np.matrix(zip(results,features))
     y_pred = KMeans(n_samples, 'random').fit(features)
     totalPred = []
     totalRes = []
     for n in range(0,n_samples):
-        print 'run number ',n
+        # print 'run number ',n
         feat = []
         res = []
         for y in range(len(y_pred.labels_)):
             if n == y_pred.labels_[y]:
                 feat.append(features[y])
                 res.append(results[y])
-        # runLinearModel(np.matrix(feat), np.matrix(res),testFeatures,testResults,input_args)
         res_use = np.matrix(res)
         new_res_use=pred_lib.reshape_results(res_use)
         feat_use = np.matrix(feat)
         new_feat_use = pred_lib.reshape_results(feat_use).ravel()
-        # pred_lib.getTrainedRandomForestModel(feat_use,new_res_use,input_args.grid_search)
-        TrainPredict(feat_use,new_res_use,testFeatures,testResults,input_args)
+        TrainPredict(feat_use,new_res_use,testFeatures,testResults,input_args,0)
     print "AGGREGATE STATS FOR K MEANS"
     pred_lib.printAggregateStats(globaldiff,globalpredDelayed,globalrealDelayed,globalpredNotDelayed,globalrealNotDelayed,globalfalsePositives,globalfalseNegatives,globalcorrectPositive,globalcorrectNegative,globalpredictionLen)
 
@@ -77,7 +73,7 @@ def runKMeans(features,results,testFeatures,testResults,n_samples,input_args):
     # labels = y_pred.labels_
     # newFeatures = np.matrix(zip(features,labels))
 
-def TrainPredict(features,results,testFeatures,testResults,input_args):
+def TrainPredict(features,results,testFeatures,testResults,input_args, print_stats):
     if input_args.sgd:
         if input_args.classifier:
             regr = pred_lib.getTrainedSGDClassifierModel(features,results.ravel(),input_args.grid_search)
@@ -110,8 +106,7 @@ def TrainPredict(features,results,testFeatures,testResults,input_args):
             Xval.append(predictions[x])
             Yval.append(results[x])
 
-
-    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results)
+    diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen = pred_lib.printStats(predictions,results,print_stats)
     updateGlobals(diff, predDelayed,realDelayed,predNotDelayed,realNotDelayed,falsePositives,falseNegatives,correctPositive,correctNegative,predictionLen)
 
     if input_args.plot:
@@ -206,7 +201,7 @@ def run(input_args):
     if input_args.baseline_oracle:
         pred_lib.BaselineOracle(testRes,input_args.classifier)
     else:
-        TrainPredict(features,results,testFeat,testRes,input_args)
+        TrainPredict(features,results,testFeat,testRes,input_args,1)
 
     return
 
