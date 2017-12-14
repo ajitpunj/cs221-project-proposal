@@ -6,18 +6,39 @@ Authors: Ajit Punj, Mehrad Moradshahi, Kyle Durfee
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
 Code:
-
-Baseline, Oracle, Logistic regression, SVM and random forests (including clustering) for delay prediction and cancellation classification were implemented both in python and matlab. The python implementations are run from "regression.py" which has "pred_lib.py" as a dependancy. 
-regression.py takes a feature CSV and a result CSV as required inputs. A variety of other input flags are available to determine what data is predicted on and which models to use. These flags can be further explored by running the following in the command line
+-------
+Python
+-------
+Baseline, Oracle, Logistic regression, SVM and random forests (including clustering) for delay prediction and 
+cancellation classification were implemented both in python and matlab. The python implementations are run from "regression.py" 
+which has "pred_lib.py" as a dependancy. regression.py takes a feature CSV and a result CSV as required inputs. 
+A variety of other input flags are available to determine what data is predicted on and which models to use. 
+These flags can be further explored by running the following in the command line
 
 "python regression.py -h"
 
 regression.py [-h] [-l] [-o] [-bo] [-p] [-k] [-s] [-b] [-rf] [-c]
                      [-pt PLOT_TITLE] [-t] [-v] [-gt GRID_SEARCH]
                      feature_file result_file
+-------
+Codalab
+-------
+The python models and their results are documented in the following Codalab Worksheet
+https://worksheets.codalab.org/worksheets/0xdcc653253e0143c4aecc85ea963c9db1/
+
+-------
+Matlab
+-------
+
+-------
+Neural Designer
+-------
 
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
 Data:
-The directory data/processed_data contains the cleaned CSV files used as input to our python models. Note that delays and cancellations have seperate feature and result files. These files contain cleaned data for domestic flights between the top five airports in terms of traffic for the month of December. Note that these flights are in chronological order and features are as reported in the raw set, regression.py does further processing in terms of creating indicator features, shuffling, etc. 
+The directory data/processed_data contains the cleaned CSV files used as input to our python models. 
+Note that delays and cancellations have seperate feature and result files. These files contain cleaned data for domestic flights 
+between the top five airports in terms of traffic for the month of December. Note that these flights are in chronological 
+order and features are as reported in the raw set, regression.py does further processing in terms of creating indicator features, shuffling, etc. 
 ------------------------------------------------------------------------
