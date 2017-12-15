@@ -39,6 +39,10 @@ code and altered it to satisfy our need for more layers. You can reproduce the r
 -------
 ND (Neural Designer)
 -------
+Neural Designer is a software for constructing and testing neural networks.
+It produces great visuals and results in the shortest amount of time.
+We again used MATLAB here to produce the output files to use with ND. the .ndp files can be opened in the software. Then
+you just need to choose the plots and error results you want to see from Testing Analysis tab.
 
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
