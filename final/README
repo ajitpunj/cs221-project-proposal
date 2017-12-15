@@ -29,6 +29,12 @@ https://worksheets.codalab.org/worksheets/0xdcc653253e0143c4aecc85ea963c9db1/
 -------
 Matlab
 -------
+The MATLAB script files each produces a specific set of outputs for Regression and Classification methods for delay prediction 
+and Classification for cancellation prediction. Their inputs are "five_airlines_cancels.csv", "five_airlines_delays.csv",
+"five_airlines_features.csv" and we parse, normalize and shuffle the data to produce the desired outputs and write them into
+different CSV files. Then we use MATLAB simulation apps to produce the results. For neural network fitting part, we extracted the 
+code and altered it to satisfy our need for more layers. You can reproduce the results by running "mehrad_neural.m"
+"mehrad_som.m", "MSE.m".
 
 -------
 ND (Neural Designer)
@@ -40,8 +46,7 @@ Data:
 
 Note that delays and cancellations have seperate feature and result files. These files contain cleaned data for domestic flights 
 between the top five airports in terms of traffic for the month of December. Note that these flights are in chronological 
-order and features are as reported in the raw set, regression.py does further processing in terms of creating indicator features, shuffling, etc.
- 
+order and features are as reported in the raw set, regression.py does further processing in terms of creating indicator features, shuffling, etc. 
 -------
 processed_data
 -------
